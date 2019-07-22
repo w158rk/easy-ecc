@@ -93,18 +93,23 @@ int test_encrypt()
 
     }
 
-    // printf("plain message:\n\t");
-    // printf("%s\n", message);
-    // printf("cipher length: %ld\n", c_len);
-    // printf("encrypted cipher:");
     
-    // int i;
-    // for(i=0; i<c_len; i++) {
-    //     if(0 == i%16) printf("\n\t");
-    //     if(0 == i%4) printf(" ");
-    //     printf("%02x", c[i]);
-    // }
-    // printf("\n");
+    #ifdef DEBUG
+    {
+        printf("plain message:\n\t");
+        printf("%s\n", message);
+        printf("cipher length: %ld\n", c_len);
+        printf("encrypted cipher:");
+
+        int i;
+        for(i=0; i<c_len; i++) {
+            if(0 == i%16) printf("\n\t");
+            if(0 == i%4) printf(" ");
+            printf("%02x", c[i]);
+        }
+        printf("\n");
+    }
+    #endif
 
     return 1;
 
@@ -145,18 +150,22 @@ int test_decrypt()
     
     }
 
-    // printf("cipher length: %ld\n", c_len);
-    // int i;
-    // printf("cipher:");
-    // for(i=0; i<c_len; i++) {
-    //     if(0 == i%16) printf("\n\t");
-    //     if(0 == i%4) printf(" ");
-    //     printf("%02x", c[i]);
-    // }
-    // printf("\n");
-    
-    // printf("decrypted message:\n\t");
-    // printf("%s\n", dm);
+    #ifdef DEBUG
+    {
+        printf("cipher length: %ld\n", c_len);
+        int i;
+        printf("cipher:");
+        for(i=0; i<c_len; i++) {
+            if(0 == i%16) printf("\n\t");
+            if(0 == i%4) printf(" ");
+            printf("%02x", c[i]);
+        }
+        printf("\n");
+        
+        printf("decrypted message:\n\t");
+        printf("%s\n", dm);
+    }
+    #endif
  
     return 1;
 

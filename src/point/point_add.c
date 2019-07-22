@@ -6,9 +6,6 @@
 #include "field.h"
 #include "point.h"
 
-/* Point multiplication algorithm using Montgomery's ladder with co-Z coordinates.
-From http://eprint.iacr.org/2011/338.pdf
-*/
 
 void EccPoint_add_jacobian(uint64_t *X3, uint64_t *Y3, uint64_t *Z3, uint64_t *X1, 
                             uint64_t *Y1, uint64_t *Z1, uint64_t *x2, uint64_t *y2)

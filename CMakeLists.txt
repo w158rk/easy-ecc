@@ -7,6 +7,9 @@ project (EASYECC)
 
 SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE Release)
+endif(NOT CMAKE_BUILD_TYPE)
 
 # add_compile_options(-O)
 include_directories(${CMAKE_SOURCE_DIR}/src/include)
