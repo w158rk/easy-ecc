@@ -72,13 +72,13 @@ int ecdsa_verify(const uint8_t p_publicKey[ECC_BYTES+1],
     EccPoint *l_point = l_points[(!!vli_testBit(u1, l_numBits-1)) | ((!!vli_testBit(u2, l_numBits-1)) << 1)];
     vli_set(rx, l_point->x);
     vli_set(ry, l_point->y);
-    vli_clear(z);
-    z[0] = 1;
+    // vli_clear(z);
+    // z[0] = 1;
 
     int i;
     for(i = l_numBits - 2; i >= 0; --i)
     {
-        EccPoint_double_jacobian(rx, ry, z);
+        EccPoint_double_jacobian(rx, ry, rx, ry);
         
         int l_index = (!!vli_testBit(u1, i)) | ((!!vli_testBit(u2, i)) << 1);
         EccPoint *l_point = l_points[l_index];

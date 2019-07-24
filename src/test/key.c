@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <string.h>
 
 #include <curves.h>
 #include <ecc.h>
@@ -177,35 +178,42 @@ end:
 
 
 
-int main() {
-    // if(0 == test_multi()) {
+int main(int argc, char *argv[]) {
 
-    //     ERROR("error in multi");
-    //     goto end;
+    int count;
+    if(1 == argc) {
+        count = 1;
+    }
 
-    // }
+    else {
+        count = atoi(argv[1]);
+    }
 
+    int i;
+    for(i=0; i<count; i++) {
+        if(0 == test_make_key()) {
 
-    if(0 == test_make_key()) {
+            ERROR("error in make_key");
+            goto end;
 
-        ERROR("error in make_key");
-        goto end;
+        }
+
+        if(0 == test_encrypt()) {
+
+            ERROR("error in encrypt");
+            goto end;
+
+        }
+
+        if(0 == test_decrypt()) {
+
+            ERROR("error in decrypt");
+            goto end;
+
+        }
 
     }
 
-    if(0 == test_encrypt()) {
-
-        ERROR("error in encrypt");
-        goto end;
-
-    }
-
-    if(0 == test_decrypt()) {
-
-        ERROR("error in decrypt");
-        goto end;
-
-    }
 
 
     return 0;

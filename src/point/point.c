@@ -6,6 +6,14 @@
 #include "field.h"
 #include "point.h"
 
+#define NUM_PRINT(n) {int i; \
+    for(i=NUM_ECC_DIGITS-1; i>=0; i--) { \
+        if(i%4==3) printf("\n");    \
+        printf("%016lx ", n[i]);       \
+    }               \
+    printf("\n\n");           \
+}
+
 /* ------ Point operations ------ */
 
 /* Returns 1 if p_point is the point at infinity, 0 otherwise. */
@@ -47,4 +55,27 @@ void ecc_point_decompress(EccPoint *p_point, const uint8_t p_compressed[ECC_BYTE
         location of the point, upsides the x-axis or downsides */
         vli_sub(p_point->y, curve_p, p_point->y);
     }
+}
+
+int check(uint64_t *x, uint64_t *y) {
+    uint64_t _3[NUM_ECC_DIGITS] = {3}; /* -a = 3 */
+    uint64_t _y[NUM_ECC_DIGITS]; /* -a = 3 */
+
+    vli_modSquare_fast(_y, x); /* y = x^2 */
+    vli_modSub(_y, _y, _3, curve_p); /* y = x^2 - 3 */
+    vli_modMult_fast(_y, _y, x); /* y = x^3 - 3x */
+    vli_modAdd(_y, _y, curve_b, curve_p); /* y = x^3 - 3x + b */
+
+    vli_modSquare_fast(y, y);
+
+    #ifdef DEBUG
+
+    printf("y : \n");
+    NUM_PRINT(y);
+    printf("_y : \n");
+    NUM_PRINT(_y);
+
+    #endif
+    
+
 }

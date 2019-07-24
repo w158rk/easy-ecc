@@ -1,22 +1,22 @@
-#!/bin/sh 
+#!/bin/bash
 
-# Author: Wang Ruikai 
+BUILDDIR=../build-analyze
+BINDIR=bin
+OUTDIR=./data
+app=$1
+count=$2
+note=$3
 
-# before your execution 
+# compile 
+mkdir -p $BUILDDIR 
+sh -c "cd $BUILDDIR && cmake -DCMAKE_BUILD_TYPE=Analyze ../ && make"
 
-# sudo sysctl kernel/perf_event_paranoid=-1   
-# sudo sh -c "echo 0 > /proc/sys/kernel/kptr_restrict"     
-# sudo mount -o remount,mode=755 /sys/kernel/debug
-# sudo mount -o remount,mode=755 /sys/kernel/debug/tracing
+# run 
+$BUILDDIR/$BINDIR/$app $count # run the program 
+echo "run finished"
 
-# Script follows here 
-
-echo "encrypt-decrypt test"
-# perf stat -B -e cpu-clock,cache-references,cache-misses,cycles,instructions,branches,faults,migrations ../build/bin/keytest
-# perf stat -d --repeat 10 -e cpu-clock,faults,task-clock ../build/bin/keytest
-perf stat -g -e cpu-clock,faults,task-clock ./run.sh
-perf record -g -e cpu-clock,faults,task-clock ./run.sh
-perf report 
-# perf report --stdio --sort comm,dso
-# perf report --stdio --dsos=keytest,libc-2.27.so
-# perf annotate --stdio --dsos=keytest
+# generate data
+mkdir -p $OUTDIR
+gprof -b -A -p -q $BUILDDIR/$BINDIR/$app gmon.out > $OUTDIR/$app-data-$note
+echo "output to" $OUTDIR/$app-data
+rm gmon.out

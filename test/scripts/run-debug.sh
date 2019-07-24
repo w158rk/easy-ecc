@@ -3,6 +3,6 @@
 x=1 
 while [ $x -le 10 ]
 do 
-    ../build/bin/keytest 
+    ../build-debug/bin/keytest 
     x=$(( $x + 1 ))
 done
