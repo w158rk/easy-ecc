@@ -2,3 +2,9 @@
 build*/
  
 perf.*
+
+data/
+
+back/
+
+scripts/

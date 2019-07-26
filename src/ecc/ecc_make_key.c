@@ -49,8 +49,22 @@ int ecc_make_key(uint8_t p_publicKey[ECC_BYTES+1],
         EccPoint_mult(&l_public, &curve_G, l_private);
     } while(EccPoint_isZero(&l_public));
     
+    if(0 == check(l_public.x, l_public.y)) {
+        ERROR(" the point generate is not on the curve");
+        goto end;
+    }
+
+    #ifdef DEBUG 
+    NUM_PRINT(l_public.x);
+    NUM_PRINT(l_public.y);
+    #endif
+
     ecc_native2bytes(p_privateKey, l_private);
     ecc_native2bytes(p_publicKey + 1, l_public.x);
     p_publicKey[0] = 2 + (l_public.y[0] & 0x01);
     return 1;
+
+end:
+    return 0;
+
 }

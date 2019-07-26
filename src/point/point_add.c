@@ -4,18 +4,11 @@
 #include "field.h"
 #include "point.h"
 
+#undef DEBUG
 #ifdef DEBUG
 
 #include <stdio.h>
 #include <stdlib.h>
-#define NUM_PRINT(n) {int i; \
-    for(i=0; i<NUM_ECC_DIGITS; i++) { \
-        if(i%4==0) printf("\n");    \
-        printf("%08lx ", n[i]);       \
-    }               \
-    printf("\n\n");           \
-    }
-
 #endif
 
 
@@ -29,7 +22,6 @@ void EccPoint_add_jacobian(uint64_t *x3, uint64_t *y3, uint64_t *x1, uint64_t *y
     uint64_t t3[NUM_ECC_DIGITS];
     uint64_t t4[NUM_ECC_DIGITS];
     uint64_t t5[NUM_ECC_DIGITS];
-    uint64_t t6[NUM_ECC_DIGITS];
     uint64_t t7[NUM_ECC_DIGITS];
 
     vli_set(t1, x1);
@@ -37,19 +29,67 @@ void EccPoint_add_jacobian(uint64_t *x3, uint64_t *y3, uint64_t *x1, uint64_t *y
     vli_set(t3, z1);
     vli_set(t4, x2);
     vli_set(t5, y2);
-    vli_set(t6, z1);
-
-    uint64_t z3[NUM_ECC_DIGITS];
 
     // check the infinity
 
     vli_modSquare_fast(t7, t3);
+
+    #ifdef DEBUG 
+    printf("t3 : \n");
+    NUM_PRINT(t3);
+    printf("t7 : \n");
+    NUM_PRINT(t7);
+    printf("t4 : \n");
+    NUM_PRINT(t4);
+    #endif
+
     vli_modMult_fast(t4, t4, t7);
-    vli_modMult_fast(t7, t7, t3);
+
+    #ifdef DEBUG 
+    printf("t4 : \n");
+    NUM_PRINT(t4);
+    printf("t3 : \n");
+    NUM_PRINT(t3);
+    #endif
+
+    vli_modMult_fast(t7, t3, t7);
+
+    #ifdef DEBUG 
+    printf("t7 : \n");
+    NUM_PRINT(t7);
+    printf("t5 : \n");
+    NUM_PRINT(t5);
+    #endif
+
     vli_modMult_fast(t5, t5, t7);
+
+    #ifdef DEBUG 
+    printf("t5 : \n");
+    NUM_PRINT(t5);
+    printf("t1 : \n");
+    NUM_PRINT(t1);
+    printf("t4 : \n");
+    NUM_PRINT(t4);
+    #endif
+
     vli_modSub(t4, t1, t4, curve_p);
 
+    #ifdef DEBUG 
+    printf("t4 : \n");
+    NUM_PRINT(t4);
+    printf("t2 : \n");
+    NUM_PRINT(t2);
+    printf("t5 : \n");
+    NUM_PRINT(t5);
+    #endif
+
     vli_modSub(t5, t2, t5, curve_p);
+
+    #ifdef DEBUG 
+    printf("t5 : \n");
+    NUM_PRINT(t5);
+    #endif
+
     if(vli_isZero(t4)) {
 
         if(vli_isZero(t5)) {
@@ -68,8 +108,27 @@ void EccPoint_add_jacobian(uint64_t *x3, uint64_t *y3, uint64_t *x1, uint64_t *y
         }
     }
 
+    #ifdef DEBUG 
+    printf("t1 : \n");
+    NUM_PRINT(t1);
+    #endif
+
     vli_modAdd(t1, t1, t1, curve_p);
+
+    #ifdef DEBUG 
+    printf("t1 : \n");
+    NUM_PRINT(t1);
+    printf("t4 : \n");
+    NUM_PRINT(t4);
+    #endif
+
     vli_modSub(t1, t1, t4, curve_p);
+
+    #ifdef DEBUG 
+    printf("t1 : \n");
+    NUM_PRINT(t1);
+    #endif
+
     vli_modAdd(t2, t2, t2, curve_p);
     vli_modSub(t2, t2, t5, curve_p);
     vli_modMult_fast(t3, t3, t4);
@@ -86,6 +145,11 @@ void EccPoint_add_jacobian(uint64_t *x3, uint64_t *y3, uint64_t *x1, uint64_t *y
     vli_modMult_fast(t4, t2, t4);
     vli_modSub(t2, t5, t4, curve_p);
 
+    #ifdef DEBUG 
+    printf("t2 : \n");
+    NUM_PRINT(t2);
+    #endif
+
     if(vli_testBit(t2, 0))
     {   
         /* t1 is an odd integer, add p to the t1, making it an even integer */
@@ -98,11 +162,32 @@ void EccPoint_add_jacobian(uint64_t *x3, uint64_t *y3, uint64_t *x1, uint64_t *y
         vli_rshift1(t2);
     }
 
-    apply_z(t1, t2, t3);
-    vli_set(x3, t1);
-    vli_set(y3, t2);
+    #ifdef DEBUG 
+    printf("t2 : \n");
+    NUM_PRINT(t2);
+    #endif
+
+    #ifdef DEBUG 
+    printf("affine X : \n");
+    NUM_PRINT(t1);
+    printf("affine Y : \n");
+    NUM_PRINT(t2);
+    printf("affine Z : \n");
+    NUM_PRINT(t3);
+    #endif
+
+    apply_z(x3, y3, t1, t2, t3);
+
+    #ifdef DEBUG 
+    printf("plain X : \n");
+    NUM_PRINT(t1);
+    printf("plain Y : \n");
+    NUM_PRINT(t2);
+    #endif
 
 }
+
+
 
 
 

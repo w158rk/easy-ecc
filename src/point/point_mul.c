@@ -6,16 +6,6 @@
 #include <field.h>
 #include <point.h>
 
-#ifdef DEBUG
-#define NUM_PRINT(n) {int i; \
-    for(i=0; i<NUM_ECC_DIGITS; i++) { \
-        if(i%4==0) printf("\n");    \
-        printf("%08lx ", n[i]);       \
-    }               \
-    printf("\n\n");           \
-    }
-#endif
-
 
 /**
  * @brief initial doubling 
@@ -104,10 +94,8 @@ void EccPoint_mult_ladder(EccPoint *p_result, EccPoint *p_point, uint64_t *p_sca
 
     XYcZ_add(Rx[nb], Ry[nb], Rx[1-nb], Ry[1-nb]);
     
-    apply_z(Rx[0], Ry[0], z);
+    apply_z(p_result->x, p_result->y, Rx[0], Ry[0], z);
     
-    vli_set(p_result->x, Rx[0]);
-    vli_set(p_result->y, Ry[0]);
 }
 
 
@@ -132,26 +120,15 @@ void EccPoint_mult_plain(EccPoint *p_result, EccPoint *p_point, uint64_t *p_scal
     vli_set(Rx, p_point->x);
     vli_set(Ry, p_point->y);
 
-    #ifdef DEBUG 
-    printf("the length of the scalar : %d\n", len);
-    #endif
-
     int i;
     for(i=len-2; i>=0; --i)
     {
 
-        #ifdef DEBUG 
-        printf("do doubling\n");
-        #endif
-        
         EccPoint_double_jacobian(Rx, Ry, Rx, Ry);
 
         if(0 != vli_testBit(p_scalar, i)) /* this bit is not zero */
         {
 
-            #ifdef DEBUG 
-            printf("do addition\n");
-            #endif
             EccPoint_add_jacobian(Rx, Ry, Rx, Ry, p_point->x, p_point->y);
 
         }

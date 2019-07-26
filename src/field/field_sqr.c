@@ -6,6 +6,7 @@
 /* Computes p_result = p_left^2. */
 void vli_square(uint64_t *p_result, uint64_t *p_left)
 {
+
     uint128_t r01 = 0;
     uint64_t r2 = 0;
     

@@ -2,6 +2,9 @@
 #include <field.h>
 
 
+#define HIGH_HALF_MASK  0xffffffff00000000ull
+#define LOW_HALF_MASK   0x00000000ffffffffull
+
 #if ECC_CURVE == secp128r1
 
 /* Computes p_result = p_product % curve_p.
@@ -76,6 +79,87 @@ void vli_mmod_fast(uint64_t *p_result, uint64_t *p_product)
 
 /* Computes p_result = p_product % curve_p
    from http://www.nsa.gov/ia/_files/nist-routines.pdf */
+/**
+ * @brief mp_mod_256(r,a)
+ * @p_result 256 bits 
+ * @p_product 256 bits
+ */
+
+void vli_mmod_slow(uint64_t *p_result, uint64_t *p_product)
+{
+    // mod by substract 
+    uint64_t expand_p[2 * NUM_ECC_DIGITS] = {0};
+    uint64_t expand_tmp[2 * NUM_ECC_DIGITS] = {0};    
+    uint64_t expand_result[2 * NUM_ECC_DIGITS] = {0};
+    
+    int i;
+    for (i=0; i<NUM_ECC_DIGITS; i++){
+        expand_p[i] = curve_p[i];
+    }
+    
+    #ifdef DEBUG 
+        printf("expanded p");
+        LONG_NUM_PRINT(expand_p);
+    #endif
+
+    for (i=0; i<NUM_ECC_DIGITS*2; i++){
+        expand_result[i] = p_product[i];
+    }
+
+    #ifdef DEBUG 
+        printf("expanded result");
+        LONG_NUM_PRINT(expand_result);
+ 
+        printf("expanded result higher bits");
+        uint64_t *p = expand_result + NUM_ECC_DIGITS;
+        NUM_PRINT(p);
+
+        printf("is zero ? :  %d\n", vli_isZero(expand_result+NUM_ECC_DIGITS));
+    #endif
+
+
+    while(0 == vli_isZero(expand_result+NUM_ECC_DIGITS) || 1 != vli_cmp(curve_p, expand_result)) {
+
+        uint len = vli_numBits(expand_result + NUM_ECC_DIGITS)-1;
+
+        // #ifdef DEBUG 
+        // printf("%d\n", len);
+        // #endif
+
+        vli_clear(expand_tmp+4);
+        vli_clear(expand_tmp);
+        // left shift
+        uint64_t carry = vli_lshift(expand_tmp+len/64, expand_p, len%64);
+        expand_tmp[len/64+4] = carry;
+
+        uint64_t l_borrow = 0;
+        uint i;
+        for(i=0; i<NUM_ECC_DIGITS * 2; ++i)
+        {
+            uint64_t l_diff = expand_result[i] - expand_tmp[i] - l_borrow;
+            l_borrow = (l_diff > expand_result[i]);
+            expand_result[i] = l_diff;
+        }
+
+        #ifdef DEBUG 
+        printf("expanded tmp");
+        LONG_NUM_PRINT(expand_tmp);
+        printf("expanded result");
+        LONG_NUM_PRINT(expand_result);
+        #endif
+
+
+    }
+
+    #ifdef DEBUG 
+    printf("finish \n");
+    #endif
+
+    vli_set(p_result, expand_result);
+
+
+}
+
 void vli_mmod_fast(uint64_t *p_result, uint64_t *p_product)
 {
     uint64_t l_tmp[NUM_ECC_DIGITS];
@@ -86,7 +170,7 @@ void vli_mmod_fast(uint64_t *p_result, uint64_t *p_product)
     
     /* s1 */
     l_tmp[0] = 0;
-    l_tmp[1] = p_product[5] & 0xffffffff00000000ull;
+    l_tmp[1] = p_product[5] & HIGH_HALF_MASK;
     l_tmp[2] = p_product[6];
     l_tmp[3] = p_product[7];
     l_carry = vli_lshift(l_tmp, l_tmp, 1);
@@ -101,14 +185,14 @@ void vli_mmod_fast(uint64_t *p_result, uint64_t *p_product)
     
     /* s3 */
     l_tmp[0] = p_product[4];
-    l_tmp[1] = p_product[5] & 0xffffffff;
+    l_tmp[1] = p_product[5] & LOW_HALF_MASK;
     l_tmp[2] = 0;
     l_tmp[3] = p_product[7];
     l_carry += vli_add(p_result, p_result, l_tmp);
     
     /* s4 */
     l_tmp[0] = (p_product[4] >> 32) | (p_product[5] << 32);
-    l_tmp[1] = (p_product[5] >> 32) | (p_product[6] & 0xffffffff00000000ull);
+    l_tmp[1] = (p_product[5] >> 32) | (p_product[6] & HIGH_HALF_MASK);
     l_tmp[2] = p_product[7];
     l_tmp[3] = (p_product[6] >> 32) | (p_product[4] << 32);
     l_carry += vli_add(p_result, p_result, l_tmp);
@@ -117,14 +201,14 @@ void vli_mmod_fast(uint64_t *p_result, uint64_t *p_product)
     l_tmp[0] = (p_product[5] >> 32) | (p_product[6] << 32);
     l_tmp[1] = (p_product[6] >> 32);
     l_tmp[2] = 0;
-    l_tmp[3] = (p_product[4] & 0xffffffff) | (p_product[5] << 32);
+    l_tmp[3] = (p_product[4] & LOW_HALF_MASK) | (p_product[5] << 32);
     l_carry -= vli_sub(p_result, p_result, l_tmp);
     
     /* d2 */
     l_tmp[0] = p_product[6];
     l_tmp[1] = p_product[7];
     l_tmp[2] = 0;
-    l_tmp[3] = (p_product[4] >> 32) | (p_product[5] & 0xffffffff00000000ull);
+    l_tmp[3] = (p_product[4] >> 32) | (p_product[5] & HIGH_HALF_MASK);
     l_carry -= vli_sub(p_result, p_result, l_tmp);
     
     /* d3 */
@@ -136,9 +220,9 @@ void vli_mmod_fast(uint64_t *p_result, uint64_t *p_product)
     
     /* d4 */
     l_tmp[0] = p_product[7];
-    l_tmp[1] = p_product[4] & 0xffffffff00000000ull;
+    l_tmp[1] = p_product[4] & HIGH_HALF_MASK;
     l_tmp[2] = p_product[5];
-    l_tmp[3] = p_product[6] & 0xffffffff00000000ull;
+    l_tmp[3] = p_product[6] & HIGH_HALF_MASK;
     l_carry -= vli_sub(p_result, p_result, l_tmp);
     
     if(l_carry < 0)

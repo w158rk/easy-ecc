@@ -33,7 +33,13 @@ int ecc_decrypt(uint8_t **m, size_t *m_len, uint8_t *c,
     EccPoint p;
     ecc_point_decompress(&p, c);         /* get the k*G */
 
-    EccPoint_mult(&p, &curve_G, sk);   /* get the s*G */
+    EccPoint_mult(&p, &p, sk);   /* get the s*kG */
+
+    #ifdef DEBUG 
+    printf("decrypt p : \n");
+    NUM_PRINT(p.x);
+    NUM_PRINT(p.y);
+    #endif
 
     uint64_t res[NUM_ECC_DIGITS];
     uint64_t r[NUM_ECC_DIGITS];
@@ -53,6 +59,7 @@ int ecc_decrypt(uint8_t **m, size_t *m_len, uint8_t *c,
         
         rpt += ECC_CURVE;
         respt += ECC_CURVE;
+
     }
 
     *m = ret;

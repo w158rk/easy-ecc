@@ -60,7 +60,28 @@ int ecc_encrypt(uint8_t **c, size_t *c_len,
         ecc_point_decompress(&pk_point, key);        
 
         EccPoint_mult(&pk_point, &pk_point, k);
+
+        if( 0 == check(pk_point.x, pk_point.y)) {
+            ERROR(" the pk_point is not on the curve");
+            goto end;
+        }
+
         EccPoint_mult(&p, &curve_G, k);
+
+        if( 0 == check(pk_point.x, pk_point.y)) {
+            ERROR(" p is not on the curve");
+            goto end;
+        }
+
+        #ifdef DEBUG 
+        printf("pk_point : ");
+        NUM_PRINT(pk_point.x);
+        NUM_PRINT(pk_point.y);
+        printf("p : ");
+        NUM_PRINT(p.x);
+        NUM_PRINT(p.y);
+        #endif
+
     
     } while(vli_isZero(p.x) || vli_isZero(pk_point.x));
 
@@ -69,11 +90,13 @@ int ecc_encrypt(uint8_t **c, size_t *c_len,
 
     uint64_t r[NUM_ECC_DIGITS];
     uint64_t res[NUM_ECC_DIGITS];
-    uint64_t *l = p.x;
+    uint64_t *l = pk_point.x;
 
     uint8_t * ret = (uint8_t *)malloc(ECC_CURVE + m_len + 1);
+    
+    uint8_t * mask = (uint8_t *)malloc(ECC_CURVE);
+    
     /* cipher and the random point */
-
     ecc_native2bytes(ret+1, p.x);
     ret[0] = 2 + (p.y[0] & 0x01);
     

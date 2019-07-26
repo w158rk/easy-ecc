@@ -29,6 +29,24 @@ typedef struct
 } uint128_t;
 #endif
 
+#ifdef DEBUG 
+#define NUM_PRINT(n) {int i; \
+    for(i=NUM_ECC_DIGITS-1; i>=0; i--) { \
+        if(i%4==3) printf("\n");    \
+        printf("%016lx ", n[i]);       \
+    }               \
+    printf("\n\n");           \
+}
+
+#define LONG_NUM_PRINT(n) {int i; \
+    for(i=NUM_ECC_DIGITS*2-1; i>=0; i--) { \
+        if(i%4==3) printf("\n");    \
+        printf("%016lx ", n[i]);       \
+    }               \
+    printf("\n\n");           \
+}
+#endif
+
 int getRandomNumber(uint64_t *p_vli);
 void vli_clear(uint64_t *p_vli);
 int vli_isZero(uint64_t *p_vli);

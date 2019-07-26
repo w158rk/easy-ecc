@@ -7,6 +7,62 @@
    https://labs.oracle.com/techrep/2001/smli_tr-2001-95.pdf */
 void vli_modInv(uint64_t *p_result, uint64_t *p_input, uint64_t *p_mod)
 {
+    uint64_t one[NUM_ECC_DIGITS] = {1};
+    uint64_t a[NUM_ECC_DIGITS] = {1}, b[NUM_ECC_DIGITS] = {0}; 
+    uint64_t u[NUM_ECC_DIGITS], v[NUM_ECC_DIGITS];
+    vli_set(u, p_input);
+    vli_set(v, p_mod);
+    
+    while ( (vli_cmp(u, one)!=0) && (vli_cmp(v, one)!=0) ) {
+
+        while(EVEN(u)) {
+
+            vli_rshift1(u);
+            if(EVEN(a)) {
+                vli_rshift1(a);
+            } else {
+                uint64_t carry = vli_add(a, a, p_mod);
+                vli_rshift1(a);
+                a[NUM_ECC_DIGITS-1] |= (carry << 63);
+            }
+
+        }
+
+        while(EVEN(v)) {
+
+            vli_rshift1(v);
+            if(EVEN(b)) {
+                vli_rshift1(b);
+            } else {
+                uint64_t carry = vli_add(b, b, p_mod);
+                vli_rshift1(b);
+                b[NUM_ECC_DIGITS-1] |= (carry << 63);
+            }
+
+        }
+
+        if(vli_cmp(u, v) >= 0) {
+            vli_modSub(u, u, v, p_mod);
+            vli_modSub(a, a, b, p_mod);
+        }
+        else {
+            vli_modSub(v, v, u, p_mod);
+            vli_modSub(b, b, a, p_mod);
+        }
+
+    } // while 
+
+    if (0 == vli_cmp(u, one)) {
+        vli_set(p_result, a);
+    } 
+    else {
+        vli_set(p_result, b);
+    }
+
+}
+
+void vli_modInv_origin(uint64_t *p_result, uint64_t *p_input, uint64_t *p_mod)
+{
     uint64_t a[NUM_ECC_DIGITS], b[NUM_ECC_DIGITS], u[NUM_ECC_DIGITS], v[NUM_ECC_DIGITS];
     uint64_t l_carry;
     int l_cmpResult;
