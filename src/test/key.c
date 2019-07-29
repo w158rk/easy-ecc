@@ -16,65 +16,6 @@ size_t m_len = ECC_CURVE;
 uint8_t *c, *dm;
 size_t c_len, dm_len;
 
-int test_multi() 
-{
-    uint64_t a[NUM_ECC_DIGITS] = {0}, b[NUM_ECC_DIGITS] = {0};
-    EccPoint p;
-    do
-    {
-        // if(!getRandomNumber(a))
-        // {
-        //     ERROR("Can't get a valid random number");
-        //     goto end;
-        // }
-        // if(!getRandomNumber(b))
-        // {
-        //     ERROR("Can't get a valid random number");
-        //     goto end;
-        // }
-        // if(vli_isZero(a) || vli_isZero(b))
-        // {
-        //     continue;
-        // }
-        int j;
-
-        a[0] = 2; 
-        b[0] = 1;
-    
-        if(vli_cmp(curve_n, a) != 1)
-        {
-
-            vli_sub(a, a, curve_n);
-
-        }
-
-        if(vli_cmp(curve_n, b) != 1)
-        {
-
-            vli_sub(b, b, curve_n);
-
-        }
-    
-        /* pk = k * pk*/
-        /* p = k * G*/
-        EccPoint_mult(&p, &curve_G, a);
-        EccPoint_mult(&p, &p, b);
-
-        EccPoint_mult(&p, &curve_G, b);
-        EccPoint_mult(&p, &p, a);
-
-        vli_modMult_fast(a, a, b);
-
-        EccPoint_mult(&p, &curve_G, a);
-
-    } while(vli_isZero(p.x));
-
-    return 1;
-
-end:
-    return 0;    
-
-}
 
 int test_make_key()
 {

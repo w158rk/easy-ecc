@@ -112,33 +112,8 @@ void EccPoint_double_jacobian_v3(uint64_t *X, uint64_t *Y, uint64_t *X1, uint64_
     #endif
 
     vli_modSquare_fast(tmp, Y1);
-
-    #ifdef DEBUG 
-    printf("Y^2' : \n");
-    NUM_PRINT(tmp);
-    #endif
-
+    vli_modAdd(tmp, tmp, tmp, curve_p);
     vli_modSquare_fast(tmp, tmp);
-
-    #ifdef DEBUG 
-    printf("Y^4' : \n");
-    NUM_PRINT(tmp);
-    #endif
-
-    vli_modAdd(tmp, tmp, tmp, curve_p);
-
-    #ifdef DEBUG 
-    printf("2Y^4' : \n");
-    NUM_PRINT(tmp);
-    #endif
-
-    vli_modAdd(tmp, tmp, tmp, curve_p);
-
-    #ifdef DEBUG 
-    printf("4Y^4' : \n");
-    NUM_PRINT(tmp);
-    #endif
-
     vli_modAdd(tmp, tmp, tmp, curve_p);
 
     #ifdef DEBUG 
@@ -160,7 +135,7 @@ void EccPoint_double_jacobian_v3(uint64_t *X, uint64_t *Y, uint64_t *X1, uint64_
     NUM_PRINT(tmp);
     #endif
 
-    apply_z(X, Y, Rx, Ry, tmp);
+    divide_z(X, Y, Rx, Ry, tmp);
 
 }
 
@@ -222,7 +197,7 @@ void EccPoint_double_jacobian_v2(uint64_t *X, uint64_t *Y, uint64_t *X1, uint64_
     NUM_PRINT(t3);
     #endif
 
-    apply_z(X, Y, t1, t2, t3);
+    divide_z(X, Y, t1, t2, t3);
 
 
     if(vli_testBit(t1, 0))
@@ -245,7 +220,7 @@ void EccPoint_double_jacobian_v2(uint64_t *X, uint64_t *Y, uint64_t *X1, uint64_
     vli_modMult_fast(t1, t1, t5);    /* t1 = B * (A - x3) */
     vli_modSub(t1, t1, t4, curve_p); /* t4 = B * (A - x3) - y1^4 = y3 */
 
-    apply_z(X, Y, t3, t1, t2);
+    divide_z(X, Y, t3, t1, t2);
 
 
 }
@@ -306,7 +281,7 @@ void EccPoint_double_jacobian_v1(uint64_t *X, uint64_t *Y, uint64_t *X1, uint64_
     vli_modMult_fast(t1, t1, t5);    /* t1 = B * (A - x3) */
     vli_modSub(t1, t1, t4, curve_p); /* t4 = B * (A - x3) - y1^4 = y3 */
 
-    apply_z(X, Y, t3, t1, t2);
+    divide_z(X, Y, t3, t1, t2);
 
 }
 
@@ -364,7 +339,7 @@ void EccPoint_double_jacobian(uint64_t *X, uint64_t *Y, uint64_t *X1, uint64_t *
     // uint64_t Z1[NUM_ECC_DIGITS] = {1};
     // EccPoint_double_jacobian_origin(X1, Y1, Z1);
 
-    // apply_z(X1, Y1, Z1);
+    // divide_z(X1, Y1, Z1);
 
     // vli_set(X, X1);
     // vli_set(Y, Y1);

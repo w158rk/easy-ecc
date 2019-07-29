@@ -54,11 +54,6 @@ int ecc_make_key(uint8_t p_publicKey[ECC_BYTES+1],
         goto end;
     }
 
-    #ifdef DEBUG 
-    NUM_PRINT(l_public.x);
-    NUM_PRINT(l_public.y);
-    #endif
-
     ecc_native2bytes(p_privateKey, l_private);
     ecc_native2bytes(p_publicKey + 1, l_public.x);
     p_publicKey[0] = 2 + (l_public.y[0] & 0x01);

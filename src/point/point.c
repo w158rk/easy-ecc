@@ -6,7 +6,6 @@
 #include "field.h"
 #include "point.h"
 
-#undef DEBUG
 /* ------ Point operations ------ */
 
 /* Returns 1 if p_point is the point at infinity, 0 otherwise. */
@@ -16,11 +15,8 @@ int EccPoint_isZero(EccPoint *p_point)
 }
 
 
-/* Modify (x1, y1) => (x1 * z^2, y1 * z^3) */
-/*
-    this function is to convert ordinary (x,y) tuples to Jacobian-affine coordinates (X,Y,Z) 
- */
-void apply_z(uint64_t *x, uint64_t *y, uint64_t *X1, uint64_t *Y1, uint64_t *Z)
+/* Modify (x1, y1, ) => (x1 / z^2, y1 / z^3) */
+void divide_z(uint64_t *x, uint64_t *y, uint64_t *X1, uint64_t *Y1, uint64_t *Z)
 {
     uint64_t t1[NUM_ECC_DIGITS];
     uint64_t t2[NUM_ECC_DIGITS];
@@ -41,6 +37,28 @@ void apply_z(uint64_t *x, uint64_t *y, uint64_t *X1, uint64_t *Y1, uint64_t *Z)
     printf("1 / Z^2 : \n");
     NUM_PRINT(t1);
     printf("1 / Z^3 : \n");
+    NUM_PRINT(t2);
+    #endif
+
+    vli_modMult_fast(x, X1, t1); /* x1 * z^2 */
+    vli_modMult_fast(y, Y1, t2); /* y1 * z^3 */
+}
+
+
+/*
+    this function is to convert ordinary (x,y) tuples to Jacobian-affine coordinates (X,Y,Z) 
+ */
+void mult_z(uint64_t *x, uint64_t *y, uint64_t *X1, uint64_t *Y1, uint64_t *Z)
+{
+    uint64_t t1[NUM_ECC_DIGITS];
+    uint64_t t2[NUM_ECC_DIGITS];
+
+    vli_modSquare_fast(t1, Z);    /* z^2 */
+    vli_modMult_fast(t2, t1, Z);  /* z^3 */
+    #ifdef DEBUG 
+    printf("Z^2 : \n");
+    NUM_PRINT(t1);
+    printf("Z^3 : \n");
     NUM_PRINT(t2);
     #endif
 

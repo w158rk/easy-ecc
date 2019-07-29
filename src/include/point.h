@@ -24,7 +24,10 @@ int EccPoint_isZero(EccPoint *p_point);
 void EccPoint_double_jacobian(uint64_t *X, uint64_t *Y, uint64_t *X1, uint64_t *Y1);
 
 
-void apply_z(uint64_t *x, uint64_t *y, uint64_t *X1, uint64_t *Y1, uint64_t *Z);
+void divide_z(uint64_t *x, uint64_t *y, uint64_t *X1, uint64_t *Y1, uint64_t *Z);
+
+void mult_z(uint64_t *x, uint64_t *y, uint64_t *X1, uint64_t *Y1, uint64_t *Z);
+
 void XYcZ_add(uint64_t *X1, uint64_t *Y1, uint64_t *X2, uint64_t *Y2);
 void XYcZ_addC(uint64_t *X1, uint64_t *Y1, uint64_t *X2, uint64_t *Y2);
 

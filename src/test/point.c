@@ -44,20 +44,18 @@ static EccPoint test_T = CONCAT(test_T_, ECC_CURVE);
 int test_mult() 
 {
 
-    uint64_t Rx[2][NUM_ECC_DIGITS];
-    uint64_t Ry[2][NUM_ECC_DIGITS];
-
     uint64_t scalar[NUM_ECC_DIGITS] = {2};
     uint64_t one[NUM_ECC_DIGITS] = {1};
+    uint64_t two[NUM_ECC_DIGITS] = {2};
 
     EccPoint p;
 
-    vli_set(Rx[1], test_G.x);
-    vli_set(Ry[1], test_G.y);
+    // vli_set(p.x, one);
+    // vli_set(p.y, two);
+    vli_set(p.x, curve_G.x);
+    vli_set(p.y, curve_G.y);
 
     /* x 1 */
-
-    EccPoint_mult(&p, &curve_G, one);
 
     printf("P : \n");
     NUM_PRINT(p.x);
@@ -69,17 +67,13 @@ int test_mult()
 
         vli_clear(scalar);
         scalar[0] = k;
-        // vli_modAdd(scalar, scalar, curve_n, curve_p);
-        EccPoint_mult(&p, &curve_G, scalar);
+        EccPoint_mult(&p, &p, scalar);
 
         if(0 == check(p.x, p.y)){
             ERROR("the point calculated is wrong");
-            printf("====================================");
-            printf("====================================\n");
+            fprintf(stderr, "k=%d\n", k);
             NUM_PRINT(p.x);
             NUM_PRINT(p.y);
-            printf("====================================");
-            printf("====================================\n");
             goto end;
         }
 
@@ -201,6 +195,7 @@ int main(int argc, char *argv[]) {
     //     goto end;
 
     // }
+    printf("pass with no error\n");
 
     return 0;
 end:

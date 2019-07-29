@@ -18,38 +18,42 @@
  */
 void XYcZ_initial_double(uint64_t *X1, uint64_t *Y1, uint64_t *X2, uint64_t *Y2)
 {
-    uint64_t *t1 = X1, *t2 = X2; 
-    uint64_t t3[NUM_ECC_DIGITS], t4[NUM_ECC_DIGITS];
-    uint64_t t5[NUM_ECC_DIGITS], t6[NUM_ECC_DIGITS];
 
-    // vli_modSquare_fast(t3, t1);
-    vli_modMult_fast(t3, t1, t1);
-    vli_modAdd(t4, t3, t3, curve_p);
-    vli_modAdd(t3, t3, t4, curve_p);
-    vli_modAdd(t3, t3, curve_a, curve_p); 
+    uint64_t one[NUM_ECC_DIGITS] = {1};
+    uint64_t Rx[NUM_ECC_DIGITS];
+    uint64_t Ry[NUM_ECC_DIGITS];
+    uint64_t tmp[NUM_ECC_DIGITS];
+    uint64_t S[NUM_ECC_DIGITS];
+    uint64_t M[NUM_ECC_DIGITS];
 
-    // vli_modSquare_fast(t4, t2);
-    vli_modMult_fast(t4, t2, t2);
-    vli_modAdd(t4, t4, t4, curve_p);
-    vli_modAdd(t5, t4, t4, curve_p);
-    vli_modMult_fast(t5, t5, t1);
+    vli_modAdd(tmp, X1, one, curve_p);
+    vli_modSub(M, X1, one, curve_p);
+    vli_modMult_fast(M, M, tmp);
+    vli_modAdd(tmp, M, M, curve_p);
+    vli_modAdd(M, M, tmp, curve_p);         /* M = 3(X+1)(X-1) */
 
-    // vli_modSquare_fast(t6, t3);
-    vli_modMult_fast(t6, t3, t3);
-    vli_modSub(t6, t6, t5, curve_p);
-    vli_modSub(t6, t6, t5, curve_p);
-    vli_modSub(t1, t5, t6, curve_p);
+    vli_modMult_fast(S, X1, Y1);             /* X * Y */
+    vli_modAdd(S, S, S, curve_p);           /* 2 * X * Y */
+    vli_modAdd(S, S, S, curve_p);            /* S = 4 * X * Y */
+    vli_modMult_fast(S, S, Y1);             /* S = 4 * X * Y^2 */
+    vli_set(X1, S);                         /* X' = 4XY^2 */
 
-    vli_modMult_fast(t1, t1, t3);
-    // vli_modSquare_fast(t3, t4);
-    vli_modMult_fast(t3, t4, t4);
-    vli_modAdd(t3, t3, t3, curve_p);
-    vli_modSub(t1, t1, t3, curve_p);
+    vli_modSquare_fast(Rx, M);
+    vli_modSub(Rx, Rx, S, curve_p);
+    vli_modSub(Rx, Rx, S, curve_p);            /* X' = M^2 - 2S */
 
-    vli_set(X2, t6);
-    vli_set(Y2, t1);
-    vli_set(X1, t5);
-    vli_set(Y1, t3);
+    vli_modSub(Ry, S, Rx, curve_p);
+    vli_modMult_fast(Ry, Ry, M);
+    vli_modSquare_fast(tmp, Y1);
+    vli_modAdd(tmp, tmp, tmp, curve_p);         /* 2Y^2 */
+    vli_modSquare_fast(tmp, tmp);
+    vli_modAdd(tmp, tmp, tmp, curve_p);
+    vli_set(Y1, tmp);                           /* Y1 = 8Y^2 */
+    vli_modSub(Ry, Ry, tmp, curve_p);            /* Y' = M(S-X') - 8Y^4 */
+
+    vli_set(X2, Rx);
+    vli_set(Y2, Ry);
+
 
 }
 
@@ -59,7 +63,7 @@ void XYcZ_initial_double(uint64_t *X1, uint64_t *Y1, uint64_t *X2, uint64_t *Y2)
  * @param[in] p_point the point 
  * @param[in] p_scalar the scalar 
  */
-void EccPoint_mult_ladder(EccPoint *p_result, EccPoint *p_point, uint64_t *p_scalar)
+void EccPoint_mult_ladder_advance(EccPoint *p_result, EccPoint *p_point, uint64_t *p_scalar)
 {
 
     uint64_t Rx[2][NUM_ECC_DIGITS];
@@ -72,6 +76,19 @@ void EccPoint_mult_ladder(EccPoint *p_result, EccPoint *p_point, uint64_t *p_sca
     vli_set(Ry[0], p_point->y);
 
     XYcZ_initial_double(Rx[0], Ry[0], Rx[1], Ry[1]);        /* R[1] = 2P and R[0] = P */
+
+    #ifdef DEBUG 
+
+    fprintf(stderr, "%d\n", check(Rx[0], Ry[0]));
+    fprintf(stderr, "R[0]");
+    NUM_PRINT(Rx[0]);
+    NUM_PRINT(Ry[0]);
+    fprintf(stderr, "%d\n", check(Rx[1], Ry[1]));
+    fprintf(stderr, "R[1]");
+    NUM_PRINT(Rx[1]);
+    NUM_PRINT(Ry[1]);
+
+    #endif 
 
     for(i = vli_numBits(p_scalar) - 2; i > 0; --i)
     {
@@ -94,7 +111,7 @@ void EccPoint_mult_ladder(EccPoint *p_result, EccPoint *p_point, uint64_t *p_sca
 
     XYcZ_add(Rx[nb], Ry[nb], Rx[1-nb], Ry[1-nb]);
     
-    apply_z(p_result->x, p_result->y, Rx[0], Ry[0], z);
+    mult_z(p_result->x, p_result->y, Rx[0], Ry[0], z);
     
 }
 
@@ -139,8 +156,54 @@ void EccPoint_mult_plain(EccPoint *p_result, EccPoint *p_point, uint64_t *p_scal
     vli_set(p_result->y, Ry);
 }
 
+/**
+ * @brief Montgomery ladder, using double-and-add method 
+ * @param[out] p_result the product 
+ * @param[in] p_point the point 
+ * @param[in] p_scalar the scalar 
+ */
+void EccPoint_mult_ladder(EccPoint *p_result, EccPoint *p_point, uint64_t *p_scalar)
+{
+
+    int len = vli_numBits(p_scalar); /* get the length of the scalar */
+
+    uint64_t Rx[2][NUM_ECC_DIGITS];
+    uint64_t Ry[2][NUM_ECC_DIGITS];
+
+    /* init */
+    vli_clear(Rx[0]);
+    vli_clear(Ry[0]);
+    vli_set(Rx[1], p_point->x);
+    vli_set(Ry[1], p_point->y);
+
+    /* process */
+    int i, nb, b;
+    for(i=len-1; i>=0; --i)
+    {
+
+        nb = !vli_testBit(p_scalar, i);
+        b = 1 - nb;
+
+        #ifdef DEBUG 
+        printf("add R[%d] with R[%d]\n", nb, b);
+        #endif
+        EccPoint_add_jacobian(Rx[nb], Ry[nb], Rx[nb], Ry[nb], Rx[b], Ry[b]);
+
+        #ifdef DEBUG 
+        printf("double R[%d]\n", b);
+        #endif
+        EccPoint_double_jacobian(Rx[b], Ry[b], Rx[b], Ry[b]);
+
+    }
+
+    vli_set(p_result->x, Rx[0]);
+    vli_set(p_result->y, Ry[0]);
+
+}
+
 
 void EccPoint_mult(EccPoint *p_result, EccPoint *p_point, uint64_t *p_scalar) {
-    EccPoint_mult_plain(p_result, p_point, p_scalar);
+    // EccPoint_mult_plain(p_result, p_point, p_scalar);
     // EccPoint_mult_ladder(p_result, p_point, p_scalar);
+    EccPoint_mult_ladder_advance(p_result, p_point, p_scalar);
 }

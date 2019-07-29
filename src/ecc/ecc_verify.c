@@ -63,7 +63,7 @@
 //     vli_modSub(z, l_sum.x, tx, curve_p); /* Z = x2 - x1 */
 //     XYcZ_add(tx, ty, l_sum.x, l_sum.y);
 //     vli_modInv(z, z, curve_p); /* Z = 1/Z */
-//     apply_z(l_sum.x, l_sum.y, z);
+//     divide_z(l_sum.x, l_sum.y, z);
     
 //     /* Use Shamir's trick to calculate u1*G + u2*Q */
 //     EccPoint *l_points[4] = {NULL, &curve_G, &l_public, &l_sum};
@@ -86,7 +86,7 @@
 //         {
 //             vli_set(tx, l_point->x);
 //             vli_set(ty, l_point->y);
-//             apply_z(tx, ty, z);
+//             divide_z(tx, ty, z);
 //             vli_modSub(tz, rx, tx, curve_p); /* Z = x2 - x1 */
 //             XYcZ_add(tx, ty, rx, ry);
 //             vli_modMult_fast(z, z, tz);
@@ -94,7 +94,7 @@
 //     }
 
 //     vli_modInv(z, z, curve_p); /* Z = 1/Z */
-//     apply_z(rx, ry, z);
+//     divide_z(rx, ry, z);
     
 //     /* v = x1 (mod n) */
 //     if(vli_cmp(curve_n, rx) != 1)
