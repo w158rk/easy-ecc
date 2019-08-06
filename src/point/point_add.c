@@ -116,15 +116,6 @@ void EccPoint_add_jacobian(uint64_t *x3, uint64_t *y3, uint64_t *x1, uint64_t *y
  */
 void XYcZ_add(uint64_t *X1, uint64_t *Y1, uint64_t *X2, uint64_t *Y2)
 {
-
-    #ifdef DEBUG 
-    fprintf(stderr, "in xycz_add");
-
-    NUM_PRINT(X1);
-    NUM_PRINT(Y1);
-    NUM_PRINT(X2);
-    NUM_PRINT(Y2);
-    #endif
     
 
     /* t1 = X1, t2 = Y1, t3 = X2, t4 = Y2 */
@@ -164,15 +155,6 @@ void XYcZ_add(uint64_t *X1, uint64_t *Y1, uint64_t *X2, uint64_t *Y2)
 void XYcZ_addC(uint64_t *X1, uint64_t *Y1, uint64_t *X2, uint64_t *Y2)
 {
 
-    #ifdef DEBUG 
-    fprintf(stderr, "enter xycz_addc");
-
-    NUM_PRINT(X1);
-    NUM_PRINT(Y1);
-    NUM_PRINT(X2);
-    NUM_PRINT(Y2);
-    #endif
-
     /* t1 = X1, t2 = Y1, t3 = X2, t4 = Y2 */
     uint64_t t5[NUM_ECC_DIGITS];
     uint64_t t6[NUM_ECC_DIGITS];
@@ -210,15 +192,6 @@ void XYcZ_addC(uint64_t *X1, uint64_t *Y1, uint64_t *X2, uint64_t *Y2)
     vli_set(Y1, t6);
     vli_set(X2, t3);
     vli_set(Y2, t4);
-
-    #ifdef DEBUG 
-    fprintf(stderr, "exit xycz_addc");
-
-    NUM_PRINT(X1);
-    NUM_PRINT(Y1);
-    NUM_PRINT(X2);
-    NUM_PRINT(Y2);
-    #endif
 
 }
 

@@ -18,3 +18,6 @@ target_link_libraries (pointtest ecc)
 
 add_executable (fieldtest field.c)
 target_link_libraries (fieldtest ecc)
+
+add_executable (hashtest hash.c)
+target_link_libraries (hashtest ecc)

@@ -12,6 +12,7 @@
 
 uint8_t p_publicKey[ECC_BYTES+1] = {0}, p_privateKey[ECC_BYTES] = {0};
 uint8_t message[ECC_CURVE] = "hello world";
+char * signature;
 size_t m_len = ECC_CURVE;
 uint8_t *c, *dm;
 size_t c_len, dm_len;
@@ -116,6 +117,34 @@ end:
 
 }
 
+int test_sign()
+{
+
+    signature = ecdsa_sign_new();
+    if (0 == ecdsa_sign(signature, p_privateKey, message, m_len)) {
+        ERROR("errors in sign");
+        goto end;
+    }
+
+    return 1;
+end:
+    return 0;
+
+}
+
+int test_verify() 
+{
+
+    if (0 == ecdsa_verify(p_publicKey, message, m_len, signature)) {
+        ERROR("error in verifying");
+        goto end;
+    }
+
+    return 1;
+end:
+    return 0;
+
+}
 
 
 
@@ -152,6 +181,21 @@ int main(int argc, char *argv[]) {
             goto end;
 
         }
+
+        if(0 == test_sign()) {
+
+            ERROR("error in sign");
+            goto end;
+
+        }
+
+        if(0 == test_verify()) {
+
+            ERROR("error in verify");
+            goto end;
+
+        }
+
 
     }
 

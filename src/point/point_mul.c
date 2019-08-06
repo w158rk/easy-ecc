@@ -110,8 +110,9 @@ void EccPoint_mult_ladder_advance(EccPoint *p_result, EccPoint *p_point, uint64_
     /* End 1/Z calculation */
 
     XYcZ_add(Rx[nb], Ry[nb], Rx[1-nb], Ry[1-nb]);
-    
+
     mult_z(p_result->x, p_result->y, Rx[0], Ry[0], z);
+
     
 }
 
