@@ -28,6 +28,18 @@ char *ecdsa_sign_new()
     return rtn;
 }
 
+void ecdsa_sign_print(char *signature) {
+    int i;
+    for (i=0; i<2 * ECC_BYTES; i++) {
+        if(i%4==0) printf(" ");
+        if(i%16==0) printf(" \n");
+        printf("%02x", signature[i] & 0xff);
+    }
+    printf("\n\n");
+   
+}
+
+
 int ecdsa_sign(char *p_signature, const char p_privateKey[ECC_BYTES], 
                 char *p_message, size_t message_len) 
 {

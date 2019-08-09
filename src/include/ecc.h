@@ -43,6 +43,7 @@ int ecdsa_sign(char *signature, const char p_privateKey[ECC_BYTES],
                 char *p_message, size_t message_len);
 
 char *ecdsa_sign_new();
+void ecdsa_sign_print(char *signature);
 
 int ecdsa_verify(const char p_publicKey[ECC_BYTES+1], 
                 const char p_message[ECC_BYTES], 

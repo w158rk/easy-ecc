@@ -21,7 +21,8 @@ int hash_process_256(int *dest, int *src, size_t num_block)
     int *current_block = src;
     int T1, T2;
 
-    int H[8] = CONCAT(H0_,ECC_CURVE);
+    /** @todo various hash functions */
+    int H[8] = CONCAT(H0_,32);
 
     for (i=0; i<num_block; i++) {
 

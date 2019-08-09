@@ -37,7 +37,7 @@ int test_encrypt()
     }
 
     
-    #ifdef DEBUG
+    #ifndef ANALYZE
     {
         printf("plain message:\n\t");
         printf("%s\n", message);
@@ -93,7 +93,7 @@ int test_decrypt()
     
     }
 
-    #ifdef DEBUG
+    #ifndef ANALYZE
     {
         printf("cipher length: %ld\n", c_len);
         int i;
@@ -125,6 +125,11 @@ int test_sign()
         ERROR("errors in sign");
         goto end;
     }
+
+    #ifndef ANALYZE 
+    printf(" the digest is following : \n");
+    ecdsa_sign_print(signature);
+    #endif 
 
     return 1;
 end:
@@ -161,12 +166,21 @@ int main(int argc, char *argv[]) {
 
     int i;
     for(i=0; i<count; i++) {
+
+        #ifndef ANALYZE 
+        printf("[ test ] make key \n");
+        #endif
+
         if(0 == test_make_key()) {
 
             ERROR("error in make_key");
             goto end;
 
         }
+
+        #ifndef ANALYZE 
+        printf("[ test ] encrypt \n");
+        #endif
 
         if(0 == test_encrypt()) {
 
@@ -175,6 +189,10 @@ int main(int argc, char *argv[]) {
 
         }
 
+        #ifndef ANALYZE 
+        printf("[ test ] decrypt \n");
+        #endif
+
         if(0 == test_decrypt()) {
 
             ERROR("error in decrypt");
@@ -182,12 +200,20 @@ int main(int argc, char *argv[]) {
 
         }
 
+        #ifndef ANALYZE 
+        printf("[ test ] sign \n");
+        #endif
+
         if(0 == test_sign()) {
 
             ERROR("error in sign");
             goto end;
 
         }
+
+        #ifndef ANALYZE 
+        printf("[ test ] verify \n");
+        #endif
 
         if(0 == test_verify()) {
 
