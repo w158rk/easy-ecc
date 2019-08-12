@@ -11,7 +11,7 @@
 
 
 uint8_t p_publicKey[ECC_BYTES+1] = {0}, p_privateKey[ECC_BYTES] = {0};
-uint8_t message[ECC_CURVE] = "hello world";
+uint8_t message[ECC_CURVE] = "Lorem ipsum dolor sit amet.";
 char * signature;
 size_t m_len = ECC_CURVE;
 uint8_t *c, *dm;
@@ -127,7 +127,7 @@ int test_sign()
     }
 
     #ifndef ANALYZE 
-    printf(" the digest is following : \n");
+    printf(" the digest is following :\n");
     ecdsa_sign_print(signature);
     #endif 
 
@@ -168,7 +168,7 @@ int main(int argc, char *argv[]) {
     for(i=0; i<count; i++) {
 
         #ifndef ANALYZE 
-        printf("[ test ] make key \n");
+        printf("\n[ test ] make key\n\n");
         #endif
 
         if(0 == test_make_key()) {
@@ -179,7 +179,7 @@ int main(int argc, char *argv[]) {
         }
 
         #ifndef ANALYZE 
-        printf("[ test ] encrypt \n");
+        printf("\n[ test ] encrypt\n\n");
         #endif
 
         if(0 == test_encrypt()) {
@@ -190,7 +190,7 @@ int main(int argc, char *argv[]) {
         }
 
         #ifndef ANALYZE 
-        printf("[ test ] decrypt \n");
+        printf("\n[ test ] decrypt\n\n");
         #endif
 
         if(0 == test_decrypt()) {
@@ -201,7 +201,7 @@ int main(int argc, char *argv[]) {
         }
 
         #ifndef ANALYZE 
-        printf("[ test ] sign \n");
+        printf("\n[ test ] sign\n\n");
         #endif
 
         if(0 == test_sign()) {
@@ -212,7 +212,7 @@ int main(int argc, char *argv[]) {
         }
 
         #ifndef ANALYZE 
-        printf("[ test ] verify \n");
+        printf("\n[ test ] verify\n\n");
         #endif
 
         if(0 == test_verify()) {
