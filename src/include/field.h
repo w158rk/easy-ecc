@@ -27,6 +27,9 @@ typedef struct
     uint64_t m_low;
     uint64_t m_high;
 } uint128_t;
+
+uint128_t mul_64_64(uint64_t p_left, uint64_t p_right);
+
 #endif
 
 #ifdef DEBUG 
@@ -73,6 +76,7 @@ void vli_modInv(uint64_t *p_result, uint64_t *p_input, uint64_t *p_mod);
 void mod_sqrt(uint64_t a[NUM_ECC_DIGITS]);
 void ecc_bytes2native(uint64_t p_native[NUM_ECC_DIGITS], const uint8_t p_bytes[ECC_BYTES]);
 void ecc_native2bytes(uint8_t p_bytes[ECC_BYTES], const uint64_t p_native[NUM_ECC_DIGITS]);
+uint128_t add_128_128(uint128_t a, uint128_t b);
 
 
 #ifdef __cplusplus

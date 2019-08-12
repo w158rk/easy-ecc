@@ -6,6 +6,13 @@
 #include <point.h>
 #include <field.h>
 
+#if ARDUINO >= 100
+    #include "Arduino.h"
+#else
+    #include "WProgram.h"
+#endif
+
+
 #define ERROR(info) fprintf(stderr, "[%s:%d]%s\n    %s\n", __FILE__, \
                 __LINE__, __func__, info) 
 
@@ -39,18 +46,17 @@ int test_encrypt()
     
     #ifndef ANALYZE
     {
-        printf("plain message:\n\t");
-        printf("%s\n", message);
-        printf("cipher length: %ld\n", c_len);
-        printf("encrypted cipher:");
+        Serial.print("plain message:\n\t");
+        Serial.print((char *)message);
+        Serial.print("encrypted cipher:");
 
         int i;
         for(i=0; i<c_len; i++) {
-            if(0 == i%16) printf("\n\t");
-            if(0 == i%4) printf(" ");
-            printf("%02x", c[i]);
+            if(0 == i%16) Serial.print("\n\t");
+            if(0 == i%4) Serial.print(" ");
+            Serial.print(c[i], HEX);
         }
-        printf("\n");
+        Serial.print("\n");
     }
     #endif
 
@@ -95,18 +101,17 @@ int test_decrypt()
 
     #ifndef ANALYZE
     {
-        printf("cipher length: %ld\n", c_len);
         int i;
-        printf("cipher:");
+        Serial.print("cipher:");
         for(i=0; i<c_len; i++) {
-            if(0 == i%16) printf("\n\t");
-            if(0 == i%4) printf(" ");
-            printf("%02x", c[i]);
+            if(0 == i%16) Serial.print("\n\t");
+            if(0 == i%4) Serial.print(" ");
+            Serial.print(c[i], HEX);
         }
-        printf("\n");
+        Serial.print("\n");
         
-        printf("decrypted message:\n\t");
-        printf("%s\n", dm);
+        Serial.print("decrypted message:\n\t");
+        Serial.print((char *)dm);
     }
     #endif
  
@@ -127,8 +132,14 @@ int test_sign()
     }
 
     #ifndef ANALYZE 
-    printf(" the digest is following :\n");
-    ecdsa_sign_print(signature);
+    Serial.print(" the digest is following :\n");
+    int i;
+    for (i=0; i<2 * ECC_BYTES; i++) {
+        if(i%4==0) Serial.print(" ");
+        if(i%16==0) Serial.print(" \n");
+        Serial.print(signature[i] & 0xff, HEX);
+    }
+    Serial.print("\n\n");
     #endif 
 
     return 1;
@@ -153,22 +164,13 @@ end:
 
 
 
-int main(int argc, char *argv[]) {
-
-    int count;
-    if(1 == argc) {
-        count = 1;
-    }
-
-    else {
-        count = atoi(argv[1]);
-    }
+int test(int count) {
 
     int i;
     for(i=0; i<count; i++) {
 
         #ifndef ANALYZE 
-        printf("\n[ test ] make key\n\n");
+        Serial.print("\n[ test ] make key\n\n");
         #endif
 
         if(0 == test_make_key()) {
@@ -179,7 +181,7 @@ int main(int argc, char *argv[]) {
         }
 
         #ifndef ANALYZE 
-        printf("\n[ test ] encrypt\n\n");
+        Serial.print("\n[ test ] encrypt\n\n");
         #endif
 
         if(0 == test_encrypt()) {
@@ -190,7 +192,7 @@ int main(int argc, char *argv[]) {
         }
 
         #ifndef ANALYZE 
-        printf("\n[ test ] decrypt\n\n");
+        Serial.print("\n[ test ] decrypt\n\n");
         #endif
 
         if(0 == test_decrypt()) {
@@ -201,7 +203,7 @@ int main(int argc, char *argv[]) {
         }
 
         #ifndef ANALYZE 
-        printf("\n[ test ] sign\n\n");
+        Serial.print("\n[ test ] sign\n\n");
         #endif
 
         if(0 == test_sign()) {
@@ -212,7 +214,7 @@ int main(int argc, char *argv[]) {
         }
 
         #ifndef ANALYZE 
-        printf("\n[ test ] verify\n\n");
+        Serial.print("\n[ test ] verify\n\n");
         #endif
 
         if(0 == test_verify()) {
@@ -233,3 +235,16 @@ end:
     return -1;
 }
 
+
+void setup() {
+    Serial.begin(9600);
+    while(!Serial) {
+
+    }
+    Serial.println("begin : ");
+}
+
+void loop() {
+    test(10);
+    delay(10000);           // wait for a second
+}

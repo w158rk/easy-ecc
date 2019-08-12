@@ -1,11 +1,18 @@
+#=======================================================#
+# Author    :   Wang Ruikai                             #
+# Date      :   12.08.2019                              #
+#                                                       #
+# Description : Arduino easy-ecc                        #
+#                                                       #
+#=======================================================#    
 
-cmake_minimum_required (VERSION 2.6)
-SET(CMAKE_C_COMPILER gcc)
-SET(CMAKE_CXX_COMPILER g++)#设置C++编译器
 
-project (EASYECC)
 
-SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+set(CMAKE_TOOLCHAIN_FILE ${CMAKE_SOURCE_DIR}/src/cmake/ArduinoToolchain.cmake)
+message (${CMAKE_TOOLCHAIN_FILE})
+cmake_minimum_required (VERSION 2.8)
+
+project (EASYECC C CXX)
 
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release)
