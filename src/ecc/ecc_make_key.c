@@ -20,8 +20,8 @@
 #define ERROR(info) fprintf(stderr, "[%s:%d]%s\n    %s", __FILE__, \
                 __LINE__, __func__, info) 
 
-int ecc_make_key(uint8_t p_publicKey[ECC_BYTES+1], 
-                uint8_t p_privateKey[ECC_BYTES])
+int ecc_make_key(char p_publicKey[ECC_BYTES+1], 
+                char p_privateKey[ECC_BYTES])
 {
     uint64_t l_private[NUM_ECC_DIGITS];
     EccPoint l_public;

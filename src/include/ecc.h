@@ -22,7 +22,7 @@ Outputs:
 
 Returns 1 if the key pair was generated successfully, 0 if an error occurred.
 */
-int ecc_make_key(uint8_t p_publicKey[ECC_BYTES+1], uint8_t p_privateKey[ECC_BYTES]);
+int ecc_make_key(char p_publicKey[ECC_BYTES+1], char p_privateKey[ECC_BYTES]);
 
 /* ecdh_shared_secret() function.
 Compute a shared secret given your secret key and someone else's public key.
@@ -37,7 +37,7 @@ Outputs:
 
 Returns 1 if the shared secret was generated successfully, 0 if an error occurred.
 */
-int ecdh_shared_secret(const uint8_t p_publicKey[ECC_BYTES+1], const uint8_t p_privateKey[ECC_BYTES], uint8_t p_secret[ECC_BYTES]);
+int ecdh_shared_secret(const char p_publicKey[ECC_BYTES+1], const char p_privateKey[ECC_BYTES], char p_secret[ECC_BYTES]);
 
 int ecdsa_sign(char *signature, const char p_privateKey[ECC_BYTES], 
                 char *p_message, size_t message_len);
@@ -60,7 +60,7 @@ int ecdsa_verify(const char p_publicKey[ECC_BYTES+1],
  * @param[in] m_len the length of the message 
  * @param[in] key the public key used to encrypt the message 
  */
-int ecc_encrypt(uint8_t **c, size_t *c_len, uint8_t *m, size_t m_len, uint8_t *key);
+int ecc_encrypt(char **c, size_t *c_len, char *m, size_t m_len, char *key);
 
 /**! 
  * @brief the decryption of a message using ECC, the length of the cipher
@@ -72,7 +72,7 @@ int ecc_encrypt(uint8_t **c, size_t *c_len, uint8_t *m, size_t m_len, uint8_t *k
  * @param[in] c_len the length of the ciphertext
  * @param[in] key the private key used to encrypt the message 
  */
-int ecc_decrypt(uint8_t **m, size_t *m_len, uint8_t *c, size_t c_len, uint8_t *key);
+int ecc_decrypt(char **m, size_t *m_len, char *c, size_t c_len, char *key);
 
 
 #ifdef __cplusplus

@@ -67,7 +67,7 @@ void mult_z(uint64_t *x, uint64_t *y, uint64_t *X1, uint64_t *Y1, uint64_t *Z)
 }
 
 
-void ecc_point_decompress(EccPoint *p_point, const uint8_t p_compressed[ECC_BYTES+1])
+void ecc_point_decompress(EccPoint *p_point, const char p_compressed[ECC_BYTES+1])
 {   /* get the point from the x coordinate */
     uint64_t _3[NUM_ECC_DIGITS] = {3}; /* -a = 3 */
     ecc_bytes2native(p_point->x, p_compressed+1);

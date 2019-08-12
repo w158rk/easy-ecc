@@ -38,7 +38,7 @@ void XYcZ_addC(uint64_t *X1, uint64_t *Y1, uint64_t *X2, uint64_t *Y2);
  * @param[in] p_scalar the scalar 
  */
 void EccPoint_mult(EccPoint *p_result, EccPoint *p_point, uint64_t *p_scalar);
-void ecc_point_decompress(EccPoint *p_point, const uint8_t p_compressed[ECC_BYTES+1]);
+void ecc_point_decompress(EccPoint *p_point, const char p_compressed[ECC_BYTES+1]);
 void EccPoint_add_jacobian(uint64_t *x3, uint64_t *y3, uint64_t *x1, 
                             uint64_t *y1, uint64_t *x2, uint64_t *y2);
 

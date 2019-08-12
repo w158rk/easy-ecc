@@ -21,8 +21,8 @@
                 __LINE__, __func__, info) 
  
 
-int ecc_encrypt(uint8_t **c, size_t *c_len, 
-                uint8_t *m, size_t m_len, uint8_t *key) {
+int ecc_encrypt(char **c, size_t *c_len, 
+                char *m, size_t m_len, char *key) {
 
     if(0 != m_len % ECC_CURVE) {
         ERROR("the length of the message must be a multiple of ECC_CURVE");
@@ -92,17 +92,17 @@ int ecc_encrypt(uint8_t **c, size_t *c_len,
     uint64_t res[NUM_ECC_DIGITS];
     uint64_t *l = pk_point.x;
 
-    uint8_t * ret = (uint8_t *)malloc(ECC_CURVE + m_len + 1);
+    char * ret = (char *)malloc(ECC_CURVE + m_len + 1);
     
-    uint8_t * mask = (uint8_t *)malloc(ECC_CURVE);
+    char * mask = (char *)malloc(ECC_CURVE);
     
     /* cipher and the random point */
     ecc_native2bytes(ret+1, p.x);
     ret[0] = 2 + (p.y[0] & 0x01);
     
     /* copy the cipher */ 
-    uint8_t *respt = ret + ECC_CURVE + 1;
-    uint8_t *rpt = m;
+    char *respt = ret + ECC_CURVE + 1;
+    char *rpt = m;
     
     for(i=1; i<=digit_cnt; ++i) 
     {

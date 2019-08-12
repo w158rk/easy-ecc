@@ -113,8 +113,8 @@ end:
     return 0;
 }
 
-int ecdsa_sign_origin(const uint8_t p_privateKey[ECC_BYTES], 
-                const uint8_t p_hash[ECC_BYTES], 
-                uint8_t p_signature[ECC_BYTES*2])
+int ecdsa_sign_origin(const char p_privateKey[ECC_BYTES], 
+                const char p_hash[ECC_BYTES], 
+                char p_signature[ECC_BYTES*2])
 {
 }

@@ -25,8 +25,8 @@ Function documentation
 #### ecc_make_key
 ```c
 int ecc_make_key(
-	uint8_t p_publicKey[ECC_BYTES+1],
-	uint8_t p_privateKey[ECC_BYTES]
+	char p_publicKey[ECC_BYTES+1],
+	char p_privateKey[ECC_BYTES]
 );
 ```
 Create a public/private key pair.
@@ -40,9 +40,9 @@ Returns 1 if the key pair was generated successfully, 0 if an error occurred.
 #### ecdh_shared_secret
 ```c
 int ecdh_shared_secret(
-	const uint8_t p_publicKey[ECC_BYTES+1],
-	const uint8_t p_privateKey[ECC_BYTES],
-	uint8_t p_secret[ECC_BYTES]
+	const char p_publicKey[ECC_BYTES+1],
+	const char p_privateKey[ECC_BYTES],
+	char p_secret[ECC_BYTES]
 );
 ```
 Compute a shared secret given your secret key and someone else's public key.
@@ -60,9 +60,9 @@ Returns 1 if the shared secret was generated successfully, 0 if an error occurre
 #### ecdsa_sign
 ```c
 int ecdsa_sign(
-	const uint8_t p_privateKey[ECC_BYTES],
-	const uint8_t p_hash[ECC_BYTES],
-	uint8_t p_signature[ECC_BYTES*2]
+	const char p_privateKey[ECC_BYTES],
+	const char p_hash[ECC_BYTES],
+	char p_signature[ECC_BYTES*2]
 );
 ```
 Generate an ECDSA signature for a given hash value.
@@ -82,9 +82,9 @@ Returns 1 if the signature generated successfully, 0 if an error occurred.
 #### ecdsa_verify
 ```c
 int ecdsa_verify(
-	const uint8_t p_publicKey[ECC_BYTES+1],
-	const uint8_t p_hash[ECC_BYTES],
-	const uint8_t p_signature[ECC_BYTES*2]
+	const char p_publicKey[ECC_BYTES+1],
+	const char p_hash[ECC_BYTES],
+	const char p_signature[ECC_BYTES*2]
 );
 ```
 Verify an ECDSA signature.

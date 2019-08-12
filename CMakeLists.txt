@@ -25,6 +25,8 @@ if(CMAKE_BUILD_TYPE MATCHES Analyze)
     add_compile_options(${CMAKE_CXX_FLAGS})
 endif(CMAKE_BUILD_TYPE MATCHES Analyze)
 
+add_compile_options(-O)
+
 include_directories(${CMAKE_SOURCE_DIR}/src/include)
 link_directories(${CMAKE_SOURCE_DIR}/src/lib)
 

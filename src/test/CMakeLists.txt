@@ -9,6 +9,7 @@ include_directories (${PROJECT_INCLUDE_DIR} ../)
 generate_arduino_firmware(keytest 
     SRCS    key.cpp
     PORT    /dev/ttyACM0
+    SERIAL  picocom @SERIAL_PORT@
     LIBS    ecc    
     BOARD   mega2560 
 )

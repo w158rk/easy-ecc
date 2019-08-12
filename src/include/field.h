@@ -74,8 +74,8 @@ void vli_modMult(uint64_t *p_result, uint64_t *p_left, uint64_t *p_right, uint64
 void vli_modSquare_fast(uint64_t *p_result, uint64_t *p_left);
 void vli_modInv(uint64_t *p_result, uint64_t *p_input, uint64_t *p_mod);
 void mod_sqrt(uint64_t a[NUM_ECC_DIGITS]);
-void ecc_bytes2native(uint64_t p_native[NUM_ECC_DIGITS], const uint8_t p_bytes[ECC_BYTES]);
-void ecc_native2bytes(uint8_t p_bytes[ECC_BYTES], const uint64_t p_native[NUM_ECC_DIGITS]);
+void ecc_bytes2native(uint64_t p_native[NUM_ECC_DIGITS], const char p_bytes[ECC_BYTES]);
+void ecc_native2bytes(char p_bytes[ECC_BYTES], const uint64_t p_native[NUM_ECC_DIGITS]);
 uint128_t add_128_128(uint128_t a, uint128_t b);
 
 

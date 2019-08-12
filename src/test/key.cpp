@@ -13,16 +13,18 @@
 #endif
 
 
-#define ERROR(info) fprintf(stderr, "[%s:%d]%s\n    %s\n", __FILE__, \
-                __LINE__, __func__, info) 
+#define ERROR(info) { Serial.print("wrong on line"); Serial.println(__LINE__); Serial.println(info);}
 
 
-uint8_t p_publicKey[ECC_BYTES+1] = {0}, p_privateKey[ECC_BYTES] = {0};
-uint8_t message[ECC_CURVE] = "Lorem ipsum dolor sit amet.";
+
+char p_publicKey[ECC_BYTES+1] = {0}, p_privateKey[ECC_BYTES] = {0};
+char message[ECC_CURVE] = "Lorem ipsum dolor sit amet.";
 char * signature;
 size_t m_len = ECC_CURVE;
-uint8_t *c, *dm;
+char *c, *dm;
 size_t c_len, dm_len;
+
+unsigned long time;
 
 
 int test_make_key()
@@ -46,17 +48,17 @@ int test_encrypt()
     
     #ifndef ANALYZE
     {
-        Serial.print("plain message:\n\t");
-        Serial.print((char *)message);
-        Serial.print("encrypted cipher:");
+        Serial.println("plain message:\n\t");
+        Serial.println((char *)message);
 
-        int i;
-        for(i=0; i<c_len; i++) {
-            if(0 == i%16) Serial.print("\n\t");
-            if(0 == i%4) Serial.print(" ");
-            Serial.print(c[i], HEX);
-        }
-        Serial.print("\n");
+        // Serial.println("encrypted cipher:");
+        // int i;
+        // for(i=0; i<c_len; i++) {
+        //     if(0 == i%16) Serial.println("\n\t");
+        //     if(0 == i%4) Serial.println(" ");
+        //     Serial.println(c[i], HEX);
+        // }
+        // Serial.println("\n");
     }
     #endif
 
@@ -101,17 +103,17 @@ int test_decrypt()
 
     #ifndef ANALYZE
     {
-        int i;
-        Serial.print("cipher:");
-        for(i=0; i<c_len; i++) {
-            if(0 == i%16) Serial.print("\n\t");
-            if(0 == i%4) Serial.print(" ");
-            Serial.print(c[i], HEX);
-        }
-        Serial.print("\n");
+        // int i;
+        // Serial.println("cipher:");
+        // for(i=0; i<c_len; i++) {
+        //     if(0 == i%16) Serial.println("\n\t");
+        //     if(0 == i%4) Serial.println(" ");
+        //     Serial.println(c[i], HEX);
+        // }
+        // Serial.println("\n");
         
-        Serial.print("decrypted message:\n\t");
-        Serial.print((char *)dm);
+        Serial.println("decrypted message:\n\t");
+        Serial.println((char *)dm);
     }
     #endif
  
@@ -132,14 +134,14 @@ int test_sign()
     }
 
     #ifndef ANALYZE 
-    Serial.print(" the digest is following :\n");
-    int i;
-    for (i=0; i<2 * ECC_BYTES; i++) {
-        if(i%4==0) Serial.print(" ");
-        if(i%16==0) Serial.print(" \n");
-        Serial.print(signature[i] & 0xff, HEX);
-    }
-    Serial.print("\n\n");
+    // Serial.println(" the digest is following :\n");
+    // int i;
+    // for (i=0; i<2 * ECC_BYTES; i++) {
+    //     if(i%4==0) Serial.println(" ");
+    //     if(i%16==0) Serial.println(" \n");
+    //     Serial.println(signature[i] & 0xff, HEX);
+    // }
+    // Serial.println("\n\n");
     #endif 
 
     return 1;
@@ -170,7 +172,7 @@ int test(int count) {
     for(i=0; i<count; i++) {
 
         #ifndef ANALYZE 
-        Serial.print("\n[ test ] make key\n\n");
+        Serial.println("\n[ test ] make key\n\n");
         #endif
 
         if(0 == test_make_key()) {
@@ -180,8 +182,12 @@ int test(int count) {
 
         }
 
+        Serial.print("Time: ");
+        time = micros();
+        Serial.println(time); //prints time since program started
+
         #ifndef ANALYZE 
-        Serial.print("\n[ test ] encrypt\n\n");
+        Serial.println("\n[ test ] encrypt\n\n");
         #endif
 
         if(0 == test_encrypt()) {
@@ -191,8 +197,12 @@ int test(int count) {
 
         }
 
+        Serial.print("Time: ");
+        time = micros();
+        Serial.println(time); //prints time since program started
+
         #ifndef ANALYZE 
-        Serial.print("\n[ test ] decrypt\n\n");
+        Serial.println("\n[ test ] decrypt\n\n");
         #endif
 
         if(0 == test_decrypt()) {
@@ -201,9 +211,12 @@ int test(int count) {
             goto end;
 
         }
+        Serial.print("Time: ");
+        time = micros();
+        Serial.println(time); //prints time since program started
 
         #ifndef ANALYZE 
-        Serial.print("\n[ test ] sign\n\n");
+        Serial.println("\n[ test ] sign\n\n");
         #endif
 
         if(0 == test_sign()) {
@@ -212,9 +225,12 @@ int test(int count) {
             goto end;
 
         }
+        Serial.print("Time: ");
+        time = micros();
+        Serial.println(time); //prints time since program started
 
         #ifndef ANALYZE 
-        Serial.print("\n[ test ] verify\n\n");
+        Serial.println("\n[ test ] verify\n\n");
         #endif
 
         if(0 == test_verify()) {
@@ -223,6 +239,9 @@ int test(int count) {
             goto end;
 
         }
+        Serial.print("Time: ");
+        time = micros();
+        Serial.println(time); //prints time since program started
 
 
     }
@@ -245,6 +264,5 @@ void setup() {
 }
 
 void loop() {
-    test(10);
-    delay(10000);           // wait for a second
+    test(1);
 }
