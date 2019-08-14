@@ -7,16 +7,23 @@
 #=======================================================#    
 
 
+if(CMAKE_BUILD_TYPE MATCHES AVR)
+    set(CMAKE_TOOLCHAIN_FILE ${CMAKE_SOURCE_DIR}/src/cmake/ArduinoToolchain.cmake)
+else(CMAKE_BUILD_TYPE MATCHES AVR)
+    set(CMAKE_C_COMPILER   gcc)
+    set(CMAKE_CXX_COMPILER g++)
+endif(CMAKE_BUILD_TYPE MATCHES AVR)
 
-set(CMAKE_TOOLCHAIN_FILE ${CMAKE_SOURCE_DIR}/src/cmake/ArduinoToolchain.cmake)
-message (${CMAKE_TOOLCHAIN_FILE})
 cmake_minimum_required (VERSION 2.8)
-
 project (EASYECC C CXX)
+
 
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release)
 endif(NOT CMAKE_BUILD_TYPE)
+
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 if(CMAKE_BUILD_TYPE MATCHES Analyze)
     set (CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} -g -pg)
