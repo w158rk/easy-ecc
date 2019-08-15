@@ -135,23 +135,23 @@ void vli_xor(uint64_t *p_result, uint64_t *p_left, uint64_t *p_right)
 }
 
 
-void ecc_bytes2native(uint64_t p_native[NUM_ECC_DIGITS], const uint8_t p_bytes[ECC_BYTES])
+void ecc_bytes2native(uint64_t p_native[NUM_ECC_DIGITS], const char p_bytes[ECC_BYTES])
 {
     unsigned i;
     for(i=0; i<NUM_ECC_DIGITS; ++i)
     {
-        const uint8_t *p_digit = p_bytes + 8 * (NUM_ECC_DIGITS - 1 - i);
+        const char *p_digit = p_bytes + 8 * (NUM_ECC_DIGITS - 1 - i);
         p_native[i] = ((uint64_t)p_digit[0] << 56) | ((uint64_t)p_digit[1] << 48) | ((uint64_t)p_digit[2] << 40) | ((uint64_t)p_digit[3] << 32) |
             ((uint64_t)p_digit[4] << 24) | ((uint64_t)p_digit[5] << 16) | ((uint64_t)p_digit[6] << 8) | (uint64_t)p_digit[7];
     }
 }
 
-void ecc_native2bytes(uint8_t p_bytes[ECC_BYTES], const uint64_t p_native[NUM_ECC_DIGITS])
+void ecc_native2bytes(char p_bytes[ECC_BYTES], const uint64_t p_native[NUM_ECC_DIGITS])
 {
     unsigned i;
     for(i=0; i<NUM_ECC_DIGITS; ++i)
     {
-        uint8_t *p_digit = p_bytes + 8 * (NUM_ECC_DIGITS - 1 - i);
+        char *p_digit = p_bytes + 8 * (NUM_ECC_DIGITS - 1 - i);
         p_digit[0] = p_native[i] >> 56;
         p_digit[1] = p_native[i] >> 48;
         p_digit[2] = p_native[i] >> 40;

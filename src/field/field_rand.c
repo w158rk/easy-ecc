@@ -26,7 +26,7 @@ int getRandomNumber(uint64_t *p_vli)
     return 1;
 }
 
-#else /* _WIN32 */
+#elif (defined(__unix__)) /* _WIN32 */
 
 /* Assume that we are using a POSIX-like system with /dev/urandom or /dev/random. */
 #include <sys/types.h>
@@ -66,6 +66,25 @@ int getRandomNumber(uint64_t *p_vli)
     close(l_fd);
     return 1;
 }
+
+#else 
+
+
+
+int getRandomNumber(uint64_t *p_vli)
+{
+    
+    char *l_ptr = (char *)p_vli;
+    int i;
+
+    for (i=0; i<ECC_BYTES; i++) {
+        *l_ptr = random(0xff);
+        l_ptr ++;
+    }
+
+    return 1;
+}
+
 
 #endif /* _WIN32 */
 

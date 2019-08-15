@@ -20,9 +20,9 @@
 #define ERROR(info) fprintf(stderr, "[%s:%d]%s\n    %s", __FILE__, \
                 __LINE__, __func__, info) 
 
-int ecdh_shared_secret(const uint8_t p_publicKey[ECC_BYTES+1], 
-                        const uint8_t p_privateKey[ECC_BYTES], 
-                        uint8_t p_secret[ECC_BYTES])
+int ecdh_shared_secret(const char p_publicKey[ECC_BYTES+1], 
+                        const char p_privateKey[ECC_BYTES], 
+                        char p_secret[ECC_BYTES])
 {
     EccPoint l_public;
     uint64_t l_private[NUM_ECC_DIGITS];

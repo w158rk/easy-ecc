@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 
+<<<<<<< HEAD
 #include <curves.h>
 #include <ecc.h>
 #include <point.h>
@@ -17,6 +18,12 @@
     printf("\n\n");           \
     }
 
+=======
+#include <avr/curves.h>
+#include <avr/ecc.h>
+#include <avr/point.h>
+#include <avr/field.h>
+>>>>>>> dev
 
 #define test_G_32 { \
     {0xF4A13945D898C296ull, 0x77037D812DEB33A0ull, 0xF8BCE6E563A440F2ull, 0x6B17D1F2E12C4247ull}, \
@@ -63,17 +70,17 @@ int test_mult()
 
     /* x 2 */
     int k;
-    vli_clear(scalar);
-    for (k=1; k<=20; k++) {
+    for (k=1; k<=64; k++) {
 
+        vli_clear(scalar);
         scalar[0] = k;
         EccPoint_mult(&p, &p, scalar);
-        fprintf(stderr, "k=%d\n", k);
-        NUM_PRINT(p.x);
-        NUM_PRINT(p.y);
 
         if(0 == check(p.x, p.y)){
             ERROR("the point calculated is wrong");
+            fprintf(stderr, "k=%d\n", k);
+            NUM_PRINT(p.x);
+            NUM_PRINT(p.y);
             goto end;
         }
 

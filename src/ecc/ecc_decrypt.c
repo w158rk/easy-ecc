@@ -20,12 +20,12 @@
 #define ERROR(info) fprintf(stderr, "[%s:%d]%s\n    %s", __FILE__, \
                 __LINE__, __func__, info) 
 
-int ecc_decrypt(uint8_t **m, size_t *m_len, uint8_t *c, 
-                        size_t c_len, uint8_t *key)
+int ecc_decrypt(char **m, size_t *m_len, char *c, 
+                        size_t c_len, char *key)
 {
 
     size_t num_digit = c_len - ECC_CURVE;
-    uint8_t *ret = (uint8_t *)malloc(num_digit);
+    char *ret = (char *)malloc(num_digit);
 
     uint64_t sk[NUM_ECC_DIGITS];
     ecc_bytes2native(sk, key);
@@ -45,8 +45,8 @@ int ecc_decrypt(uint8_t **m, size_t *m_len, uint8_t *c,
     uint64_t r[NUM_ECC_DIGITS];
     uint64_t *l = p.x;
 
-    uint8_t *rpt = c + ECC_CURVE + 1;
-    uint8_t *respt = ret;
+    char *rpt = c + ECC_CURVE + 1;
+    char *respt = ret;
 
     int i=0;
     

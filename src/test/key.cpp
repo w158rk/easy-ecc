@@ -6,16 +6,25 @@
 #include <point.h>
 #include <field.h>
 
-#define ERROR(info) fprintf(stderr, "[%s:%d]%s\n    %s\n", __FILE__, \
-                __LINE__, __func__, info) 
+#if ARDUINO >= 100
+    #include "Arduino.h"
+#else
+    #include "WProgram.h"
+#endif
 
 
-uint8_t p_publicKey[ECC_BYTES+1] = {0}, p_privateKey[ECC_BYTES] = {0};
-uint8_t message[ECC_CURVE] = "Lorem ipsum dolor sit amet.";
+#define ERROR(info) { Serial.print("wrong on line"); Serial.println(__LINE__); Serial.println(info);}
+
+
+
+char p_publicKey[ECC_BYTES+1] = {0}, p_privateKey[ECC_BYTES] = {0};
+char message[ECC_CURVE] = "Lorem ipsum dolor sit amet.";
 char * signature;
 size_t m_len = ECC_CURVE;
-uint8_t *c, *dm;
+char *c, *dm;
 size_t c_len, dm_len;
+
+unsigned long time;
 
 
 int test_make_key()
@@ -39,18 +48,17 @@ int test_encrypt()
     
     #ifndef ANALYZE
     {
-        printf("plain message:\n\t");
-        printf("%s\n", message);
-        printf("cipher length: %ld\n", c_len);
-        printf("encrypted cipher:");
+        Serial.println("plain message:\n\t");
+        Serial.println((char *)message);
 
-        int i;
-        for(i=0; i<c_len; i++) {
-            if(0 == i%16) printf("\n\t");
-            if(0 == i%4) printf(" ");
-            printf("%02x", c[i]);
-        }
-        printf("\n");
+        // Serial.println("encrypted cipher:");
+        // int i;
+        // for(i=0; i<c_len; i++) {
+        //     if(0 == i%16) Serial.println("\n\t");
+        //     if(0 == i%4) Serial.println(" ");
+        //     Serial.println(c[i], HEX);
+        // }
+        // Serial.println("\n");
     }
     #endif
 
@@ -95,18 +103,17 @@ int test_decrypt()
 
     #ifndef ANALYZE
     {
-        printf("cipher length: %ld\n", c_len);
-        int i;
-        printf("cipher:");
-        for(i=0; i<c_len; i++) {
-            if(0 == i%16) printf("\n\t");
-            if(0 == i%4) printf(" ");
-            printf("%02x", c[i]);
-        }
-        printf("\n");
+        // int i;
+        // Serial.println("cipher:");
+        // for(i=0; i<c_len; i++) {
+        //     if(0 == i%16) Serial.println("\n\t");
+        //     if(0 == i%4) Serial.println(" ");
+        //     Serial.println(c[i], HEX);
+        // }
+        // Serial.println("\n");
         
-        printf("decrypted message:\n\t");
-        printf("%s\n", dm);
+        Serial.println("decrypted message:\n\t");
+        Serial.println((char *)dm);
     }
     #endif
  
@@ -127,8 +134,14 @@ int test_sign()
     }
 
     #ifndef ANALYZE 
-    printf(" the digest is following :\n");
-    ecdsa_sign_print(signature);
+    // Serial.println(" the digest is following :\n");
+    // int i;
+    // for (i=0; i<2 * ECC_BYTES; i++) {
+    //     if(i%4==0) Serial.println(" ");
+    //     if(i%16==0) Serial.println(" \n");
+    //     Serial.println(signature[i] & 0xff, HEX);
+    // }
+    // Serial.println("\n\n");
     #endif 
 
     return 1;
@@ -153,22 +166,13 @@ end:
 
 
 
-int main(int argc, char *argv[]) {
-
-    int count;
-    if(1 == argc) {
-        count = 1;
-    }
-
-    else {
-        count = atoi(argv[1]);
-    }
+int test(int count) {
 
     int i;
     for(i=0; i<count; i++) {
 
         #ifndef ANALYZE 
-        printf("\n[ test ] make key\n\n");
+        Serial.println("\n[ test ] make key\n\n");
         #endif
 
         if(0 == test_make_key()) {
@@ -178,8 +182,12 @@ int main(int argc, char *argv[]) {
 
         }
 
+        Serial.print("Time: ");
+        time = micros();
+        Serial.println(time); //prints time since program started
+
         #ifndef ANALYZE 
-        printf("\n[ test ] encrypt\n\n");
+        Serial.println("\n[ test ] encrypt\n\n");
         #endif
 
         if(0 == test_encrypt()) {
@@ -189,8 +197,12 @@ int main(int argc, char *argv[]) {
 
         }
 
+        Serial.print("Time: ");
+        time = micros();
+        Serial.println(time); //prints time since program started
+
         #ifndef ANALYZE 
-        printf("\n[ test ] decrypt\n\n");
+        Serial.println("\n[ test ] decrypt\n\n");
         #endif
 
         if(0 == test_decrypt()) {
@@ -199,9 +211,12 @@ int main(int argc, char *argv[]) {
             goto end;
 
         }
+        Serial.print("Time: ");
+        time = micros();
+        Serial.println(time); //prints time since program started
 
         #ifndef ANALYZE 
-        printf("\n[ test ] sign\n\n");
+        Serial.println("\n[ test ] sign\n\n");
         #endif
 
         if(0 == test_sign()) {
@@ -210,9 +225,12 @@ int main(int argc, char *argv[]) {
             goto end;
 
         }
+        Serial.print("Time: ");
+        time = micros();
+        Serial.println(time); //prints time since program started
 
         #ifndef ANALYZE 
-        printf("\n[ test ] verify\n\n");
+        Serial.println("\n[ test ] verify\n\n");
         #endif
 
         if(0 == test_verify()) {
@@ -221,6 +239,9 @@ int main(int argc, char *argv[]) {
             goto end;
 
         }
+        Serial.print("Time: ");
+        time = micros();
+        Serial.println(time); //prints time since program started
 
 
     }
@@ -233,3 +254,15 @@ end:
     return -1;
 }
 
+
+void setup() {
+    Serial.begin(9600);
+    while(!Serial) {
+
+    }
+    Serial.println("begin : ");
+}
+
+void loop() {
+    test(1);
+}

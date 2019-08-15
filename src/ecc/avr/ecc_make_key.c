@@ -11,21 +11,17 @@
 #include <stdint.h>
 #include <string.h>
 
-#include "curves.h"
-#include "field.h"
-#include "ecc.h"
-#include "point.h"
+#include "avr/curves.h"
+#include "avr/field.h"
+#include "avr/ecc.h"
+#include "avr/point.h"
 
-#define UMAX(a, b) a>b ? a : b
-#define ERROR(info) fprintf(stderr, "[%s:%d]%s\n    %s", __FILE__, \
-                __LINE__, __func__, info) 
-
-int ecc_make_key(char p_publicKey[ECC_BYTES+1], 
-                char p_privateKey[ECC_BYTES])
+uint8_t ecc_make_key(uint8_t p_publicKey[ECC_BYTES+1], 
+                uint8_t p_privateKey[ECC_BYTES])
 {
-    uint64_t l_private[NUM_ECC_DIGITS];
+    uint8_t l_private[ECC_BYTES];
     EccPoint l_public;
-    unsigned l_tries = 0;
+    uint8_t l_tries = 0;
     
     do
     {
@@ -54,8 +50,14 @@ int ecc_make_key(char p_publicKey[ECC_BYTES+1],
         goto end;
     }
 
-    ecc_native2bytes(p_privateKey, l_private);
-    ecc_native2bytes(p_publicKey + 1, l_public.x);
+    #ifdef DEBUG 
+    vli_clear(l_private);
+    l_private[0] = 2;
+    EccPoint_mult(&l_public, &curve_G, l_private);
+    #endif
+
+    memcpy(p_privateKey, l_private, ECC_BYTES);
+    memcpy(p_publicKey + 1, l_public.x, ECC_BYTES);
     p_publicKey[0] = 2 + (l_public.y[0] & 0x01);
     return 1;
 

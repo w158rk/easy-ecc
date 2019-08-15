@@ -21,6 +21,11 @@ uint64_t vli_add(uint64_t *p_result, uint64_t *p_left, uint64_t *p_right)
 
 #if SUPPORTS_INT128
 
+uint128_t add_128_128(uint128_t a, uint128_t b)
+{
+    return a+b;
+}
+
 
 #else /* #if SUPPORTS_INT128 */
 
