@@ -63,17 +63,17 @@ int test_mult()
 
     /* x 2 */
     int k;
+    vli_clear(scalar);
     for (k=1; k<=20; k++) {
 
-        vli_clear(scalar);
         scalar[0] = k;
         EccPoint_mult(&p, &p, scalar);
+        fprintf(stderr, "k=%d\n", k);
+        NUM_PRINT(p.x);
+        NUM_PRINT(p.y);
 
         if(0 == check(p.x, p.y)){
             ERROR("the point calculated is wrong");
-            fprintf(stderr, "k=%d\n", k);
-            NUM_PRINT(p.x);
-            NUM_PRINT(p.y);
             goto end;
         }
 

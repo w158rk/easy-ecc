@@ -16,8 +16,8 @@ endif(CMAKE_BUILD_TYPE MATCHES Analyze)
 
 target_link_libraries (keytest ecc)
 
-# add_executable (pointtest point.c)
-# target_link_libraries (pointtest ecc)
+add_executable (pointtest point.c)
+target_link_libraries (pointtest ecc)
 
 add_executable (fieldtest field.c)
 target_link_libraries (fieldtest ecc)
