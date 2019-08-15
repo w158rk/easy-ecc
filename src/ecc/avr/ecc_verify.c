@@ -60,17 +60,24 @@ uint8_t ecdsa_verify(const uint8_t p_publicKey[ECC_BYTES+1],
 
     uint8_t *p_hash = sha_256_new(message_len);
     sha_256(p_hash, p_message, message_len);
+    #ifdef DEBUG
+    ERROR("[verify] hash value");
+    NUM_PRINT(p_hash);
+    #endif
 
     /* Calculate u1 and u2. */
-    vli_modInv(z, l_s, curve_p); /* Z = s^-1 */
+    vli_modInv(z, l_s, curve_n); /* Z = s^-1 */
+    // vli_modInv(z, l_s, curve_p); /* Z = s^-1 */
     #ifdef DEBUG 
     ERROR("1/s");
     NUM_PRINT(z);
     ERROR("r");
     NUM_PRINT(l_r);
     #endif
-    vli_modMult_fast(u1, p_hash, z); /* u1 = e/s */
-    vli_modMult_fast(u2, l_r, z); /* u2 = r/s */
+    // vli_modMult_fast(u1, p_hash, z); /* u1 = e/s */
+    vli_modMult(u1, p_hash, z, curve_n); /* u1 = e/s */
+    // vli_modMult_fast(u2, l_r, z); /* u2 = r/s */
+    vli_modMult(u2, l_r, z, curve_n); /* u2 = r/s */
 
     #ifdef DEBUG 
     ERROR("u1");
@@ -79,8 +86,30 @@ uint8_t ecdsa_verify(const uint8_t p_publicKey[ECC_BYTES+1],
     NUM_PRINT(u2);
     #endif
 
+    #ifdef DEBUG 
+    ERROR("curve_G");
+    NUM_PRINT(curve_G.x);
+    #endif
+
     EccPoint_mult(&l_sum, &curve_G, u1);
+
+    #ifdef DEBUG 
+    ERROR("u1 * curve_G");
+    NUM_PRINT(l_sum.x);
+    #endif
+
+    #ifdef DEBUG 
+    ERROR("l_public");
+    NUM_PRINT(l_public.x);
+    #endif
+
     EccPoint_mult(&l_public, &l_public, u2);
+
+    #ifdef DEBUG 
+    ERROR("u2 * l_public");
+    NUM_PRINT(l_public.x);
+    #endif
+
     EccPoint_add_jacobian(l_sum.x, l_sum.y, l_sum.x, l_sum.y, l_public.x, l_public.y);
     int test = check(l_sum.x, l_sum.y);
     printf("test : %d\n", test);

@@ -88,9 +88,11 @@ uint8_t ecdsa_sign(uint8_t *p_signature, const uint8_t p_privateKey[ECC_BYTES],
     memcpy(p_signature, p.x, ECC_BYTES);
     
     l_tmp = p_privateKey;
-    vli_modMult_fast(l_s, p.x, l_tmp);
+    // vli_modMult_fast(l_s, p.x, l_tmp);
+    vli_modMult(l_s, p.x, l_tmp, curve_n); /* s = r*d */
     l_tmp = hash;
-    vli_modAdd(l_s, l_tmp, l_s, curve_p); /* s = e + r*d */
+    // vli_modAdd(l_s, l_tmp, l_s, curve_p); /* s = e + r*d */
+    vli_modAdd(l_s, l_tmp, l_s, curve_n); /* s = e + r*d */
 
     #ifdef DEBUG 
     ERROR("s");
@@ -99,8 +101,10 @@ uint8_t ecdsa_sign(uint8_t *p_signature, const uint8_t p_privateKey[ECC_BYTES],
     NUM_PRINT(p.x);
     #endif
 
-    vli_modInv(k, k, curve_p); /* k = 1 / k */
-    vli_modMult_fast(l_s, l_s, k);
+    // vli_modInv(k, k, curve_p); /* k = 1 / k */
+    vli_modInv(k, k, curve_n); /* k = 1 / k */
+    vli_modMult(l_s, l_s, k, curve_n); /* s = (e + r*d) / k */
+    // vli_modMult_fast(l_s, l_s, k);
     while (vli_cmp(curve_n, p.x) != 1) {
         vli_sub(l_s, l_s, curve_n);
     }
