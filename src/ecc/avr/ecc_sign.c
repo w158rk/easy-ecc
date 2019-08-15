@@ -50,6 +50,7 @@ uint8_t ecdsa_sign(uint8_t *p_signature, const uint8_t p_privateKey[ECC_BYTES],
     sha_256(hash, p_message, message_len);
 
     #ifdef DEBUG 
+    vli_clear(hash);
     ERROR("[sign] hash value");
     NUM_PRINT(hash);
     #endif
@@ -73,10 +74,6 @@ uint8_t ecdsa_sign(uint8_t *p_signature, const uint8_t p_privateKey[ECC_BYTES],
     
         /* tmp = k * G */
         EccPoint_mult(&p, &curve_G, k);
-        #ifdef DEBUG 
-        ERROR("k used in signature");
-        NUM_PRINT(k)
-        #endif
     
         /* r = x1 (mod n) */
         while(vli_cmp(curve_n, p.x) != 1)
@@ -84,6 +81,17 @@ uint8_t ecdsa_sign(uint8_t *p_signature, const uint8_t p_privateKey[ECC_BYTES],
             vli_sub(p.x, p.x, curve_n);
         }
     } while(vli_isZero(p.x));
+
+    
+    #ifdef DEBUG 
+    vli_clear(k);
+    k[0] = 1;    
+    ERROR("k used in signature");
+    NUM_PRINT(k)
+    EccPoint_mult(&p, &curve_G, k);
+    ERROR("p.x");
+    NUM_PRINT(p.x);
+    #endif
 
     memcpy(p_signature, p.x, ECC_BYTES);
     
@@ -97,8 +105,6 @@ uint8_t ecdsa_sign(uint8_t *p_signature, const uint8_t p_privateKey[ECC_BYTES],
     #ifdef DEBUG 
     ERROR("s");
     NUM_PRINT(l_s);
-    ERROR("p.x");
-    NUM_PRINT(p.x);
     #endif
 
     // vli_modInv(k, k, curve_p); /* k = 1 / k */

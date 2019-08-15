@@ -61,8 +61,14 @@ uint8_t ecdsa_verify(const uint8_t p_publicKey[ECC_BYTES+1],
     uint8_t *p_hash = sha_256_new(message_len);
     sha_256(p_hash, p_message, message_len);
     #ifdef DEBUG
+    vli_clear(p_hash);
     ERROR("[verify] hash value");
     NUM_PRINT(p_hash);
+    #endif
+    #ifdef DEBUG 
+    ERROR("curve_G");
+    NUM_PRINT(curve_G.x);
+    u1[0] = 1;
     #endif
 
     /* Calculate u1 and u2. */
@@ -87,8 +93,9 @@ uint8_t ecdsa_verify(const uint8_t p_publicKey[ECC_BYTES+1],
     #endif
 
     #ifdef DEBUG 
-    ERROR("curve_G");
+    ERROR("curve_G1");
     NUM_PRINT(curve_G.x);
+    u1[0] = 1;
     #endif
 
     EccPoint_mult(&l_sum, &curve_G, u1);
@@ -101,13 +108,16 @@ uint8_t ecdsa_verify(const uint8_t p_publicKey[ECC_BYTES+1],
     #ifdef DEBUG 
     ERROR("l_public");
     NUM_PRINT(l_public.x);
+    ERROR("u2");
+    NUM_PRINT(u2);
     #endif
 
-    EccPoint_mult(&l_public, &l_public, u2);
+    EccPoint p;
+    EccPoint_mult(&p, &l_public, u2);
 
     #ifdef DEBUG 
     ERROR("u2 * l_public");
-    NUM_PRINT(l_public.x);
+    NUM_PRINT(p.x);
     #endif
 
     EccPoint_add_jacobian(l_sum.x, l_sum.y, l_sum.x, l_sum.y, l_public.x, l_public.y);

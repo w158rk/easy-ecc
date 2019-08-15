@@ -110,53 +110,45 @@ void EccPoint_mult_ladder_advance(EccPoint *p_result, EccPoint *p_point, uint8_t
 
     XYcZ_initial_double(Rx[0], Ry[0], Rx[1], Ry[1]);        /* R[1] = 2P and R[0] = P */
 
+    #ifdef DEBUG 
+    ERROR("p_scalar");
+    NUM_PRINT(p_scalar);
+    #endif
+
     for(i = vli_numBits(p_scalar) - 2; i > 0; --i)
     {
+        #ifdef DEBUG 
+        printf("i : %d\n", i);
+        #endif
         nb = !vli_testBit(p_scalar, i);
         XYcZ_addC(Rx[1-nb], Ry[1-nb], Rx[nb], Ry[nb]);
         XYcZ_add(Rx[nb], Ry[nb], Rx[1-nb], Ry[1-nb]);
     }
 
     nb = !vli_testBit(p_scalar, 0);
-
+    #ifdef DEBUG 
+    printf("nb : %d\n", nb);
+    #endif
     XYcZ_addC(Rx[1-nb], Ry[1-nb], Rx[nb], Ry[nb]);
-
-
 
     /* Find final 1/Z value. */
     vli_modSub(z, Rx[1], Rx[0], curve_p); /* X1 - X0 */
     vli_modMult_fast(z, z, Ry[1-nb]);     /* Yb * (X1 - X0) */
     vli_modMult_fast(z, z, p_point->x);   /* xP * Yb * (X1 - X0) */
-    #ifdef DEBUG 
-    uint8_t debug_tmp[ECC_BYTES];
-    vli_set(debug_tmp, z);
-    #endif
     vli_modInv(z, z, curve_p);            /* 1 / (xP * Yb * (X1 - X0)) */
-    #ifdef DEBUG 
-    ERROR("debug multiply");
-    NUM_PRINT(debug_tmp);
-    vli_modMult_fast(debug_tmp, debug_tmp, z);
-    NUM_PRINT(debug_tmp);
-    NUM_PRINT(z);
-    #endif
     vli_modMult_fast(z, z, p_point->y);   /* yP / (xP * Yb * (X1 - X0)) */
     vli_modMult_fast(z, z, Rx[1-nb]);     /* Xb * yP / (xP * Yb * (X1 - X0)) */
     /* End 1/Z calculation */
 
-    #ifdef DEBUG 
-    ERROR("x0");
-    NUM_PRINT(Rx[0]);
-    ERROR("y0");
-    NUM_PRINT(Ry[0]);
-    ERROR("x1");
-    NUM_PRINT(Rx[1]);
-    ERROR("y1");
-    NUM_PRINT(Ry[1]);
-    #endif
-    
     XYcZ_add(Rx[nb], Ry[nb], Rx[1-nb], Ry[1-nb]);
 
     mult_z(p_result->x, p_result->y, Rx[0], Ry[0], z);
+    #ifdef DEBUG 
+    ERROR("Result");
+    NUM_PRINT(p_point->x);
+    NUM_PRINT(p_scalar);
+    NUM_PRINT(p_result->x);
+    #endif
 
     
 }
