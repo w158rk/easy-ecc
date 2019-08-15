@@ -38,7 +38,6 @@ int test_make_key()
 
 int test_encrypt()
 {
-    ERROR("test");
 
     if(0 == ecc_encrypt(&c, &c_len, message, m_len, p_publicKey)) {
 
@@ -47,7 +46,6 @@ int test_encrypt()
 
     }
 
-    ERROR("encrypt finish");
 
     
     #ifndef ANALYZE
@@ -208,27 +206,27 @@ int main(int argc, uint8_t *argv[]) {
 
         }
 
-        // #ifndef ANALYZE 
-        // printf("\n[ test ] encrypt\n\n");
-        // #endif
+        #ifndef ANALYZE 
+        printf("\n[ test ] encrypt\n\n");
+        #endif
 
-        // if(0 == test_encrypt()) {
+        if(0 == test_encrypt()) {
 
-        //     ERROR("error in encrypt");
-        //     goto end;
+            ERROR("error in encrypt");
+            goto end;
 
-        // }
+        }
 
-        // #ifndef ANALYZE 
-        // printf("\n[ test ] decrypt\n\n");
-        // #endif
+        #ifndef ANALYZE 
+        printf("\n[ test ] decrypt\n\n");
+        #endif
 
-        // if(0 == test_decrypt()) {
+        if(0 == test_decrypt()) {
 
-        //     ERROR("error in decrypt");
-        //     goto end;
+            ERROR("error in decrypt");
+            goto end;
 
-        // }
+        }
 
         #ifndef ANALYZE 
         printf("\n[ test ] sign\n\n");

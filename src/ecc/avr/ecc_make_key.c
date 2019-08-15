@@ -52,7 +52,7 @@ uint8_t ecc_make_key(uint8_t p_publicKey[ECC_BYTES+1],
 
     #ifdef DEBUG 
     vli_clear(l_private);
-    l_private[0] = 1;
+    l_private[0] = 2;
     EccPoint_mult(&l_public, &curve_G, l_private);
     #endif
 

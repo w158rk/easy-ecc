@@ -85,7 +85,7 @@ uint8_t ecdsa_sign(uint8_t *p_signature, const uint8_t p_privateKey[ECC_BYTES],
     
     #ifdef DEBUG 
     vli_clear(k);
-    k[0] = 1;    
+    k[0] = 1;
     ERROR("k used in signature");
     NUM_PRINT(k)
     EccPoint_mult(&p, &curve_G, k);

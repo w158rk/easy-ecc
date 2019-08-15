@@ -95,7 +95,6 @@ uint8_t ecdsa_verify(const uint8_t p_publicKey[ECC_BYTES+1],
     #ifdef DEBUG 
     ERROR("curve_G1");
     NUM_PRINT(curve_G.x);
-    u1[0] = 1;
     #endif
 
     EccPoint_mult(&l_sum, &curve_G, u1);
@@ -112,17 +111,14 @@ uint8_t ecdsa_verify(const uint8_t p_publicKey[ECC_BYTES+1],
     NUM_PRINT(u2);
     #endif
 
-    EccPoint p;
-    EccPoint_mult(&p, &l_public, u2);
+    EccPoint_mult(&l_public, &l_public, u2);
 
     #ifdef DEBUG 
     ERROR("u2 * l_public");
-    NUM_PRINT(p.x);
+    NUM_PRINT(l_public.x);
     #endif
 
     EccPoint_add_jacobian(l_sum.x, l_sum.y, l_sum.x, l_sum.y, l_public.x, l_public.y);
-    int test = check(l_sum.x, l_sum.y);
-    printf("test : %d\n", test);
     
     vli_set(rx, l_sum.x);
     /* v = x1 (mod q) */

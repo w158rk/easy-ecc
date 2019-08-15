@@ -52,13 +52,13 @@ int test_mult()
 
         vli_clear(scalar);
         scalar[0] = k;
-        EccPoint_mult(&p, &p, scalar);
+        EccPoint_mult(&p, &curve_G, scalar);
 
         if(0 == check(p.x, p.y)){
             ERROR("the point calculated is wrong");
+            NUM_PRINT(curve_G.x);
             fprintf(stderr, "k=%d\n", k);
             NUM_PRINT(p.x);
-            NUM_PRINT(p.y);
             goto end;
         }
 
@@ -144,7 +144,7 @@ int NIST_test()
 
         vli_clear(scalar);
         scalar[0] = k;
-        EccPoint_mult(&p, &p, scalar);
+        EccPoint_mult(&p, &curve_G, scalar);
 
         if(0 == check(p.x, p.y)){
             ERROR("the point calculated is wrong");

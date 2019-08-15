@@ -6,7 +6,7 @@
 #include <avr/field.h>
 #include <avr/point.h>
 
-#undef DEBUG
+// #undef DEBUG
 /**
  * @brief initial doubling 
  * @param[in] X1 P.x 
@@ -32,59 +32,26 @@ void XYcZ_initial_double(uint8_t *X1, uint8_t *Y1, uint8_t *X2, uint8_t *Y2)
     vli_modAdd(tmp, M, M, curve_p);
     vli_modAdd(M, M, tmp, curve_p);         /* M = 3(X+1)(X-1) */
 
-    #ifdef DEBUG 
-    fprintf(stderr, "===========M=========\n=");
-    NUM_PRINT(M);
-    #endif
-
     vli_modMult_fast(S, X1, Y1);             /* X * Y */
     vli_modAdd(S, S, S, curve_p);           /* 2 * X * Y */
     vli_modAdd(S, S, S, curve_p);            /* S = 4 * X * Y */
     vli_modMult_fast(S, S, Y1);             /* S = 4 * X * Y^2 */
     vli_set(X1, S);                         /* X1 = 4XY^2 */
 
-    #ifdef DEBUG 
-    fprintf(stderr, "===========S=========\n=");
-    NUM_PRINT(S);
-    #endif
-
-
     vli_modSquare_fast(Rx, M);
     vli_modSub(Rx, Rx, S, curve_p);
 
-    #ifdef DEBUG 
-    fprintf(stderr, "===========M-S=========\n=");
-    NUM_PRINT(Rx);
-    #endif
-
     vli_modSub(Rx, Rx, S, curve_p);            /* X' = M^2 - 2S */
-
-    #ifdef DEBUG 
-    fprintf(stderr, "===========M-2S=========\n=");
-    NUM_PRINT(Rx);
-    #endif
 
     vli_modSub(Ry, S, Rx, curve_p);
     vli_modMult_fast(Ry, Ry, M);
     vli_modSquare_fast(tmp, Y1);
     vli_modAdd(tmp, tmp, tmp, curve_p);         /* 2Y^2 */
     vli_modSquare_fast(tmp, tmp);
-    #ifdef DEBUG 
-    fprintf(stderr, "===========4Y^4=========\n=");
-    NUM_PRINT(tmp);
-    #endif
+
     vli_modAdd(tmp, tmp, tmp, curve_p);
     vli_set(Y1, tmp);                           /* Y1 = 8Y^4 */
-    #ifdef DEBUG 
-    fprintf(stderr, "===========8Y^4=========\n=");
-    NUM_PRINT(tmp);
-    #endif
     vli_modSub(Ry, Ry, tmp, curve_p);            /* Y' = M(S-X') - 8Y^4 */
-
-    #ifdef DEBUG 
-    fprintf(stderr, "===========Y=========\n=");
-    NUM_PRINT(Ry);
-    #endif
 
     vli_set(X2, Rx);
     vli_set(Y2, Ry);
@@ -98,12 +65,26 @@ void XYcZ_initial_double(uint8_t *X1, uint8_t *Y1, uint8_t *X2, uint8_t *Y2)
  */
 void EccPoint_mult_ladder_advance(EccPoint *p_result, EccPoint *p_point, uint8_t *p_scalar)
 {
+    if(vli_isZero(p_scalar)) {
+        vli_clear(p_result->x);
+        vli_clear(p_result->y);
+        return ;
+    }
+
+    uint16_t len = vli_numBits(p_scalar);
+    if(len==1) {
+        /* scalar = 1 */
+        vli_set(p_result->x, p_point->x);
+        vli_set(p_result->y, p_point->y);
+        return ;
+    }
 
     uint8_t Rx[2][ECC_BYTES];
     uint8_t Ry[2][ECC_BYTES];
     uint8_t z[ECC_BYTES];
     
-    int8_t i, nb;
+    int16_t i;
+    int8_t nb;
 
     vli_set(Rx[0], p_point->x);
     vli_set(Ry[0], p_point->y);
@@ -113,9 +94,10 @@ void EccPoint_mult_ladder_advance(EccPoint *p_result, EccPoint *p_point, uint8_t
     #ifdef DEBUG 
     ERROR("p_scalar");
     NUM_PRINT(p_scalar);
+    printf("length : %d\n", len);
     #endif
 
-    for(i = vli_numBits(p_scalar) - 2; i > 0; --i)
+    for(i = len - 2; i > 0; --i)
     {
         #ifdef DEBUG 
         printf("i : %d\n", i);
