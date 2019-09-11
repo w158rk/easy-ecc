@@ -22,8 +22,8 @@
 #define BLOCK_BYTE_SIZE     (BLOCK_BIT_SIZE/8)
 #define BLOCK_WORD_SIZE     (BLOCK_BYTE_SIZE/4)
 
-#define ROTL(n,x)           ( (x << n) | ((unsigned)x >> 32-n))
-#define ROTR(n,x)           ( ((unsigned)x >> n) | (x << 32-n))
+#define ROTL(n,x)           ( (x << n) | ((unsigned)x >> (32-n)))
+#define ROTR(n,x)           ( ((unsigned)x >> n) | (x << (32-n)))
 #define SHR(n,x)            ((unsigned)x >> n) 
 #define SHL(n,x)            (x >> n) 
 

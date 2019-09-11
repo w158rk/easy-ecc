@@ -44,9 +44,9 @@ int ecdsa_sign(char *p_signature, const char p_privateKey[ECC_BYTES],
                 char *p_message, size_t message_len) 
 {
 
-    uint64_t k[NUM_ECC_DIGITS];
-    uint64_t l_tmp[NUM_ECC_DIGITS];
-    uint64_t l_s[NUM_ECC_DIGITS];
+    uint32_t k[NUM_ECC_DIGITS];
+    uint32_t l_tmp[NUM_ECC_DIGITS];
+    uint32_t l_s[NUM_ECC_DIGITS];
     EccPoint p;
     unsigned l_tries = 0;
     
@@ -83,7 +83,7 @@ int ecdsa_sign(char *p_signature, const char p_privateKey[ECC_BYTES],
         }
     
         /* tmp = k * G */
-        EccPoint_mult(&p, &curve_G, k);
+        EccPoint_mult_P(&p, k);
     
         /* r = x1 (mod n) */
         while(vli_cmp(curve_n, p.x) != 1)
@@ -111,10 +111,4 @@ int ecdsa_sign(char *p_signature, const char p_privateKey[ECC_BYTES],
 end:
     sha_256_free(hash);
     return 0;
-}
-
-int ecdsa_sign_origin(const char p_privateKey[ECC_BYTES], 
-                const char p_hash[ECC_BYTES], 
-                char p_signature[ECC_BYTES*2])
-{
 }

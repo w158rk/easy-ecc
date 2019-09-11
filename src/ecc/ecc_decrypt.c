@@ -27,7 +27,7 @@ int ecc_decrypt(char **m, size_t *m_len, char *c,
     size_t num_digit = c_len - ECC_CURVE;
     char *ret = (char *)malloc(num_digit);
 
-    uint64_t sk[NUM_ECC_DIGITS];
+    uint32_t sk[NUM_ECC_DIGITS];
     ecc_bytes2native(sk, key);
 
     EccPoint p;
@@ -41,9 +41,9 @@ int ecc_decrypt(char **m, size_t *m_len, char *c,
     NUM_PRINT(p.y);
     #endif
 
-    uint64_t res[NUM_ECC_DIGITS];
-    uint64_t r[NUM_ECC_DIGITS];
-    uint64_t *l = p.x;
+    uint32_t res[NUM_ECC_DIGITS];
+    uint32_t r[NUM_ECC_DIGITS];
+    uint32_t *l = p.x;
 
     char *rpt = c + ECC_CURVE + 1;
     char *respt = ret;

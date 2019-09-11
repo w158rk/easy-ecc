@@ -16,15 +16,15 @@
  * @param[out] X2 2P.x 
  * @param[out] Y2 2P.x
  */
-void XYcZ_initial_double(uint64_t *X1, uint64_t *Y1, uint64_t *X2, uint64_t *Y2)
+void XYcZ_initial_double(uint32_t *X1, uint32_t *Y1, uint32_t *X2, uint32_t *Y2)
 {
 
-    uint64_t one[NUM_ECC_DIGITS] = {1};
-    uint64_t Rx[NUM_ECC_DIGITS];
-    uint64_t Ry[NUM_ECC_DIGITS];
-    uint64_t tmp[NUM_ECC_DIGITS];
-    uint64_t S[NUM_ECC_DIGITS];
-    uint64_t M[NUM_ECC_DIGITS];
+    uint32_t one[NUM_ECC_DIGITS] = {1};
+    uint32_t Rx[NUM_ECC_DIGITS];
+    uint32_t Ry[NUM_ECC_DIGITS];
+    uint32_t tmp[NUM_ECC_DIGITS];
+    uint32_t S[NUM_ECC_DIGITS];
+    uint32_t M[NUM_ECC_DIGITS];
 
     vli_modAdd(tmp, X1, one, curve_p);
     vli_modSub(M, X1, one, curve_p);
@@ -63,41 +63,65 @@ void XYcZ_initial_double(uint64_t *X1, uint64_t *Y1, uint64_t *X2, uint64_t *Y2)
  * @param[in] p_point the point 
  * @param[in] p_scalar the scalar 
  */
-void EccPoint_mult_ladder_advance(EccPoint *p_result, EccPoint *p_point, uint64_t *p_scalar)
+void EccPoint_mult_ladder_advance(EccPoint *p_result, EccPoint *p_point, uint32_t *p_scalar)
 {
+    if(vli_isZero(p_scalar)) {
+        vli_clear(p_result->x);
+        vli_clear(p_result->y);
+        return ;
+    }
 
-    uint64_t Rx[2][NUM_ECC_DIGITS];
-    uint64_t Ry[2][NUM_ECC_DIGITS];
-    uint64_t z[NUM_ECC_DIGITS];
-    
-    int i, nb;
+    uint16_t len = vli_numBits(p_scalar);
+    if(len==1) {
+        /* scalar = 1 */
+        vli_set(p_result->x, p_point->x);
+        vli_set(p_result->y, p_point->y);
+        return ;
+    }
+
+    uint32_t Rx[2][NUM_ECC_DIGITS];
+    uint32_t Ry[2][NUM_ECC_DIGITS];
+    uint32_t z[NUM_ECC_DIGITS];
     
     vli_set(Rx[0], p_point->x);
     vli_set(Ry[0], p_point->y);
 
     XYcZ_initial_double(Rx[0], Ry[0], Rx[1], Ry[1]);        /* R[1] = 2P and R[0] = P */
 
-    #ifdef DEBUG 
+    int num_digit = (len-1) / 32;
+    uint32_t digit = 0;
+    int pos = 0;
+    int i = len-2;
+    int nb = 0;
 
-    fprintf(stderr, "%d\n", check(Rx[0], Ry[0]));
-    fprintf(stderr, "R[0]");
-    NUM_PRINT(Rx[0]);
-    NUM_PRINT(Ry[0]);
-    fprintf(stderr, "%d\n", check(Rx[1], Ry[1]));
-    fprintf(stderr, "R[1]");
-    NUM_PRINT(Rx[1]);
-    NUM_PRINT(Ry[1]);
 
-    #endif 
+    // for(i = vli_numBits(p_scalar) - 2; i > 0; --i)
+    // {
+    //     nb = !vli_testBit(p_scalar, i);
+    //     XYcZ_addC(Rx[1-nb], Ry[1-nb], Rx[nb], Ry[nb]);
+    //     XYcZ_add(Rx[nb], Ry[nb], Rx[1-nb], Ry[1-nb]);
+    // }
+    while (num_digit >= 0) {
+        digit = p_scalar[num_digit];
+        pos = i % 32;
+        #ifdef DEBUG 
+        printf("[before] i : %d, pos : %d, num_digit : %d\n", i, pos, num_digit);
+        #endif
+        while (pos >= 0 && i > 0) {
+            #ifdef DEBUG 
+            printf("[mul-nonfix] i : %d, pos : %d, num_digit : %d\n", i, pos, num_digit);
+            #endif
+            nb = !((digit >> pos) & 0x01);
+            XYcZ_addC(Rx[1-nb], Ry[1-nb], Rx[nb], Ry[nb]);
+            XYcZ_add(Rx[nb], Ry[nb], Rx[1-nb], Ry[1-nb]);
 
-    for(i = vli_numBits(p_scalar) - 2; i > 0; --i)
-    {
-        nb = !vli_testBit(p_scalar, i);
-        XYcZ_addC(Rx[1-nb], Ry[1-nb], Rx[nb], Ry[nb]);
-        XYcZ_add(Rx[nb], Ry[nb], Rx[1-nb], Ry[1-nb]);
+            -- i;
+            -- pos;
+        }
+        -- num_digit;
     }
 
-    nb = !vli_testBit(p_scalar, 0);
+    nb = !(p_scalar[0] & 0x01);
     XYcZ_addC(Rx[1-nb], Ry[1-nb], Rx[nb], Ry[nb]);
 
     /* Find final 1/Z value. */
@@ -116,95 +140,129 @@ void EccPoint_mult_ladder_advance(EccPoint *p_result, EccPoint *p_point, uint64_
     
 }
 
-
-/**
- * @brief simple implementation of mult_plain, using double-and-add method 
- * @param[out] p_result the product 
- * @param[in] p_point the point 
- * @param[in] p_scalar the scalar 
- */
-void EccPoint_mult_plain(EccPoint *p_result, EccPoint *p_point, uint64_t *p_scalar)
+void mult_new(EccPoint *p_result, EccPoint *p_point, uint32_t *p_scalar) 
 {
-    /* R0 and R1 */
-    /* R0 = (Rx[0], Ry[0]) */
-    /* R1 = (Rx[1], Ry[1]) */
+    if(vli_isZero(p_scalar)) {
+        vli_clear(p_result->x);
+        vli_clear(p_result->y);
+        return ;
+    }
 
-    int len = vli_numBits(p_scalar); /* get the length of the scalar */
+    uint16_t len = vli_numBits(p_scalar);
+    // if(len==1) {
+    //     /* scalar = 1 */
+    //     vli_set(p_result->x, p_point->x);
+    //     vli_set(p_result->y, p_point->y);
+    //     return ;
+    // }
 
-    uint64_t Rx[NUM_ECC_DIGITS];
-    uint64_t Ry[NUM_ECC_DIGITS];
+    uint32_t x[2][NUM_ECC_DIGITS];
+    uint32_t y[2][NUM_ECC_DIGITS];
+    uint32_t z[2][NUM_ECC_DIGITS] = {{1}, {1}};
+    vli_set(x[0], p_point->x);
+    vli_set(y[0], p_point->y);
+    uint8_t cur = 0, ncur = 1;
 
-    /* initialize the result as P */
-    vli_set(Rx, p_point->x);
-    vli_set(Ry, p_point->y);
+    int num_digit = (len-1) / 32;
+    uint32_t digit = 0;
+    int pos = 0;
+    int i = len-2;
+    int b = 0;
 
-    int i;
-    for(i=len-2; i>=0; --i)
-    {
+    while (i >= 0) {
+        digit = p_scalar[num_digit];
+        pos = i % 32;
+        b = ((digit >> pos) & 0x01);
+        
+        EccPoint_double_jacobian(x[ncur], y[ncur], z[ncur], x[cur], y[cur], z[cur]);
 
-        EccPoint_double_jacobian(Rx, Ry, Rx, Ry);
-
-        if(0 != vli_testBit(p_scalar, i)) /* this bit is not zero */
-        {
-
-            EccPoint_add_jacobian(Rx, Ry, Rx, Ry, p_point->x, p_point->y);
-
+        if(b){
+            EccPoint_add_jacobian(x[ncur], y[ncur], z[ncur], p_point->x, p_point->y);
         }
 
+        ncur = cur;
+        cur = !cur;
+        num_digit = pos==0 ? (num_digit-1) : num_digit;
+        -- i;
     }
 
-    vli_set(p_result->x, Rx);
-    vli_set(p_result->y, Ry);
+    divide_z(p_result->x, p_result->y, x[cur], y[cur], z[cur]);
+
+
 }
 
-/**
- * @brief Montgomery ladder, using double-and-add method 
- * @param[out] p_result the product 
- * @param[in] p_point the point 
- * @param[in] p_scalar the scalar 
- */
-void EccPoint_mult_ladder(EccPoint *p_result, EccPoint *p_point, uint64_t *p_scalar)
+void EccPoint_mult_P(EccPoint *p_result, uint32_t *p_scalar) 
 {
+    if(vli_isZero(p_scalar)) {
+        vli_clear(p_result->x);
+        vli_clear(p_result->y);
+        return ;
+    }
+    uint32_t x[2][NUM_ECC_DIGITS];
+    uint32_t y[2][NUM_ECC_DIGITS];
+    uint32_t z[2][NUM_ECC_DIGITS] = {{1}, {1}};
+    uint8_t cur = 0, ncur = 1;
+    int len = vli_numBits(p_scalar);
 
-    int len = vli_numBits(p_scalar); /* get the length of the scalar */
+    // intialize 
+    int i = len % 32;               // how many bits in the first block
+    int pos = len % 4;              // how many should be considered
+    int num_digit = (len-1) / 32;
+    #ifdef DEBUG 
+    fprintf(stderr, "i : %d, pos : %d, num_digit : %d\n", i, pos, num_digit);
+    #endif
+    int b = p_scalar[num_digit] >> (i-pos);
+    if (i==0) b = 0;
 
-    uint64_t Rx[2][NUM_ECC_DIGITS];
-    uint64_t Ry[2][NUM_ECC_DIGITS];
+    vli_set(x[0], curve_nG[b].x);
+    vli_set(y[0], curve_nG[b].y);
 
-    /* init */
-    vli_clear(Rx[0]);
-    vli_clear(Ry[0]);
-    vli_set(Rx[1], p_point->x);
-    vli_set(Ry[1], p_point->y);
+    uint32_t digit = 0;
+    #ifdef DEBUG 
+    fprintf(stderr, "i : %d, pos : %d, num_digit : %d\ncur : %d, ncur : %d\n", i, pos, num_digit, cur, ncur);
+    #endif
 
-    /* process */
-    int i, nb, b;
-    for(i=len-1; i>=0; --i)
-    {
-
-        nb = !vli_testBit(p_scalar, i);
-        b = 1 - nb;
-
-        #ifdef DEBUG 
-        printf("add R[%d] with R[%d]\n", nb, b);
-        #endif
-        EccPoint_add_jacobian(Rx[nb], Ry[nb], Rx[nb], Ry[nb], Rx[b], Ry[b]);
-
-        #ifdef DEBUG 
-        printf("double R[%d]\n", b);
-        #endif
-        EccPoint_double_jacobian(Rx[b], Ry[b], Rx[b], Ry[b]);
-
+    i = (len/4) * 4 - 4;
+    pos = 0;
+    if (i<0) {
+        goto end;
     }
 
-    vli_set(p_result->x, Rx[0]);
-    vli_set(p_result->y, Ry[0]);
+    while (num_digit >= 0) {
+        digit = p_scalar[num_digit];
+        pos = i % 32;
+        while (pos >= 0) {
+
+            #ifdef DEBUG 
+            fprintf(stderr, "i : %d, pos : %d, num_digit : %d\ncur : %d, ncur : %d\n", i, pos, num_digit, cur, ncur);
+            #endif
+            b = ((digit >> pos) & 0x0f);
+            
+            EccPoint_double_jacobian(x[ncur], y[ncur], z[ncur], x[cur], y[cur], z[cur]);
+            EccPoint_double_jacobian(x[cur], y[cur], z[cur], x[ncur], y[ncur], z[ncur]);
+            EccPoint_double_jacobian(x[ncur], y[ncur], z[ncur], x[cur], y[cur], z[cur]);
+            EccPoint_double_jacobian(x[cur], y[cur], z[cur], x[ncur], y[ncur], z[ncur]);
+            EccPoint_add_jacobian(x[cur], y[cur], z[cur], curve_nG[b].x, curve_nG[b].y);
+
+            i -= 4;
+            pos -= 4;
+
+        }
+        num_digit --;
+    }
+
+end:
+    #ifdef DEBUG 
+    printf("mark\n");
+    #endif
+    divide_z(p_result->x, p_result->y, x[cur], y[cur], z[cur]);
 
 }
 
 
-void EccPoint_mult(EccPoint *p_result, EccPoint *p_point, uint64_t *p_scalar) {
-    // EccPoint_mult_plain(p_result, p_point, p_scalar);
+void EccPoint_mult(EccPoint *p_result, EccPoint *p_point, uint32_t *p_scalar) {
     // EccPoint_mult_ladder(p_result, p_point, p_scalar);
     EccPoint_mult_ladder_advance(p_result, p_point, p_scalar);
+    // mult_new(p_result, p_point, p_scalar);
+
 }

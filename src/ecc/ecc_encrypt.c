@@ -30,13 +30,10 @@ int ecc_encrypt(char **c, size_t *c_len,
     }
 
     /* choose a random k */
-    uint64_t k[NUM_ECC_DIGITS];
-    uint64_t l_tmp[NUM_ECC_DIGITS];
-    uint64_t l_s[NUM_ECC_DIGITS];
+    uint32_t k[NUM_ECC_DIGITS];
     EccPoint p;
     EccPoint pk_point;
     unsigned l_tries = 0;
-    int j;
     
     do
     {
@@ -66,7 +63,7 @@ int ecc_encrypt(char **c, size_t *c_len,
             goto end;
         }
 
-        EccPoint_mult(&p, &curve_G, k);
+        EccPoint_mult_P(&p, k);
 
         if( 0 == check(pk_point.x, pk_point.y)) {
             ERROR(" p is not on the curve");
@@ -88,13 +85,12 @@ int ecc_encrypt(char **c, size_t *c_len,
     int digit_cnt = m_len / ECC_CURVE;
     int i=0;
 
-    uint64_t r[NUM_ECC_DIGITS];
-    uint64_t res[NUM_ECC_DIGITS];
-    uint64_t *l = pk_point.x;
+    uint32_t r[NUM_ECC_DIGITS];
+    uint32_t res[NUM_ECC_DIGITS];
+    uint32_t *l = pk_point.x;
 
     char * ret = (char *)malloc(ECC_CURVE + m_len + 1);
     
-    char * mask = (char *)malloc(ECC_CURVE);
     
     /* cipher and the random point */
     ecc_native2bytes(ret+1, p.x);

@@ -12,7 +12,7 @@
 #include <windows.h>
 #include <wincrypt.h>
 
-int getRandomNumber(uint64_t *p_vli)
+int getRandomNumber(uint32_t *p_vli)
 {
     HCRYPTPROV l_prov;
     if(!CryptAcquireContext(&l_prov, NULL, NULL, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT))
@@ -37,7 +37,7 @@ int getRandomNumber(uint64_t *p_vli)
     #define O_CLOEXEC 0
 #endif
 
-int getRandomNumber(uint64_t *p_vli)
+int getRandomNumber(uint32_t *p_vli)
 {
     int l_fd = open("/dev/urandom", O_RDONLY | O_CLOEXEC);
     if(l_fd == -1)
@@ -71,7 +71,7 @@ int getRandomNumber(uint64_t *p_vli)
 
 
 
-int getRandomNumber(uint64_t *p_vli)
+int getRandomNumber(uint32_t *p_vli)
 {
     
     char *l_ptr = (char *)p_vli;

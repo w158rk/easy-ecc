@@ -1,17 +1,14 @@
 #include <stdio.h>
 #include <string.h>
 
-#include <avr/curves.h>
-#include <avr/ecc.h>
-#include <avr/point.h>
-#include <avr/field.h>
-
-#define ERROR(info) fprintf(stderr, "[%s:%d]%s\n    %s\n", __FILE__, \
-                __LINE__, __func__, info) 
+#include <curves.h>
+#include <ecc.h>
+#include <point.h>
+#include <field.h>
 
 
 uint8_t p_publicKey[ECC_BYTES+1] = {0}, p_privateKey[ECC_BYTES] = {0};
-uint8_t message[ECC_CURVE] = "Lorem ipsum dolor sit amet.";
+uint8_t message[ECC_CURVE] = "Lorem ipsum.";
 uint8_t * signature;
 size_t m_len = ECC_CURVE;
 uint8_t *c, *dm;
@@ -28,8 +25,9 @@ int test_make_key()
     EccPoint debug_p;
     ecc_point_decompress(&debug_p, p_publicKey);
     ERROR("genereated public key");
+    printf("test if the public key on the curve : %d", check(debug_p.x, debug_p.y));
     NUM_PRINT(debug_p.x);
-    NUM_PRINT(p_privateKey);
+    printf("test the last byte of the private key : %d", p_privateKey[0]);
 
     #endif
 
@@ -45,8 +43,7 @@ int test_encrypt()
         goto end;
 
     }
-
-
+    
     
     #ifndef ANALYZE
     {

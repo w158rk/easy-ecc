@@ -1,14 +1,13 @@
 #include <curves.h>
 #include <field.h>
 
-
-#if SUPPORTS_INT128
+#undef DEBUG
 
 /* Computes p_result = p_left * p_right. */
-void vli_mult(uint64_t *p_result, uint64_t *p_left, uint64_t *p_right)
+void vli_mult(uint32_t *p_result, uint32_t *p_left, uint32_t *p_right)
 {
-    uint128_t r01 = 0;
-    uint64_t r2 = 0;
+    uint64_t r01 = 0;
+    uint32_t r2 = 0;
     
     uint i, k;
     
@@ -18,89 +17,45 @@ void vli_mult(uint64_t *p_result, uint64_t *p_left, uint64_t *p_right)
         uint l_min = (k < NUM_ECC_DIGITS ? 0 : (k + 1) - NUM_ECC_DIGITS);
         for(i=l_min; i<=k && i<NUM_ECC_DIGITS; ++i)
         {
-            uint128_t l_product = (uint128_t)p_left[i] * p_right[k-i];
+            uint64_t l_product = (uint64_t)p_left[i] * p_right[k-i];
             r01 += l_product;
             r2 += (r01 < l_product);
         }
-        p_result[k] = (uint64_t)r01;
-        r01 = (r01 >> 64) | (((uint128_t)r2) << 64);
+        p_result[k] = (uint32_t)r01;
+        r01 = (r01 >> 32) | (((uint64_t)r2) << 32);
         r2 = 0;
     }
     
-    p_result[NUM_ECC_DIGITS*2 - 1] = (uint64_t)r01;
+    p_result[NUM_ECC_DIGITS*2 - 1] = (uint32_t)r01;
 }
-
-#else /* #if SUPPORTS_INT128 */
-
-uint128_t mul_64_64(uint64_t p_left, uint64_t p_right)
-{
-    uint128_t l_result;
-    
-    uint64_t a0 = p_left & 0xffffffffull;
-    uint64_t a1 = p_left >> 32;
-    uint64_t b0 = p_right & 0xffffffffull;
-    uint64_t b1 = p_right >> 32;
-    
-    uint64_t m0 = a0 * b0;
-    uint64_t m1 = a0 * b1;
-    uint64_t m2 = a1 * b0;
-    uint64_t m3 = a1 * b1;
-    
-    m2 += (m0 >> 32);
-    m2 += m1;
-    if(m2 < m1)
-    { // overflow
-        m3 += 0x100000000ull;
-    }
-    
-    l_result.m_low = (m0 & 0xffffffffull) | (m2 << 32);
-    l_result.m_high = m3 + (m2 >> 32);
-    
-    return l_result;
-}
-
-void vli_mult(uint64_t *p_result, uint64_t *p_left, uint64_t *p_right)
-{
-    uint128_t r01 = {0, 0};
-    uint64_t r2 = 0;
-    
-    uint i, k;
-    
-    /* Compute each digit of p_result in sequence, maintaining the carries. */
-    for(k=0; k < NUM_ECC_DIGITS*2 - 1; ++k)
-    {
-        uint l_min = (k < NUM_ECC_DIGITS ? 0 : (k + 1) - NUM_ECC_DIGITS);
-        for(i=l_min; i<=k && i<NUM_ECC_DIGITS; ++i)
-        {
-            uint128_t l_product = mul_64_64(p_left[i], p_right[k-i]);
-            r01 = add_128_128(r01, l_product);
-            r2 += (r01.m_high < l_product.m_high);  /* overflow */
-        }
-        p_result[k] = r01.m_low;    /* right shift */
-        r01.m_low = r01.m_high;
-        r01.m_high = r2;
-        r2 = 0;
-    }
-    
-    p_result[NUM_ECC_DIGITS*2 - 1] = r01.m_low;
-}
-
-#endif /* SUPPORTS_INT128 */
 
 /* Computes p_result = (p_left * p_right) % curve_p. */
-void vli_modMult_fast(uint64_t *p_result, uint64_t *p_left, uint64_t *p_right)
+void vli_modMult_fast(uint32_t *p_result, uint32_t *p_left, uint32_t *p_right)
 {
-    uint64_t l_product[2 * NUM_ECC_DIGITS];
+    uint32_t l_product[2 * NUM_ECC_DIGITS];
     vli_mult(l_product, p_left, p_right);
+    #ifdef DEBUG 
+    ERROR("left");
+    NUM_PRINT(p_left);
+    ERROR("right");
+    NUM_PRINT(p_right);
+    ERROR("product");
+    NUM_PRINT((l_product+NUM_ECC_DIGITS));
+    NUM_PRINT(l_product);
+    #endif
     vli_mmod_fast(p_result, l_product);
+    #ifdef DEBUG 
+    ERROR("moded product");
+    NUM_PRINT(p_result);
+    #endif
 }
 
 
 /* Computes p_result = (p_left * p_right) % p_mod. */
-void vli_modMult(uint64_t *p_result, uint64_t *p_left, uint64_t *p_right, uint64_t *p_mod)
+void vli_modMult(uint32_t *p_result, uint32_t *p_left, uint32_t *p_right, uint32_t *p_mod)
 {
-    uint64_t l_product[2 * NUM_ECC_DIGITS];
-    uint64_t l_modMultiple[2 * NUM_ECC_DIGITS];
+    uint32_t l_product[2 * NUM_ECC_DIGITS];
+    uint32_t l_modMultiple[2 * NUM_ECC_DIGITS];
     uint l_digitShift, l_bitShift;
     uint l_productBits;
     uint l_modBits = vli_numBits(p_mod);
@@ -109,7 +64,7 @@ void vli_modMult(uint64_t *p_result, uint64_t *p_left, uint64_t *p_right, uint64
     l_productBits = vli_numBits(l_product + NUM_ECC_DIGITS);
     if(l_productBits)
     {
-        l_productBits += NUM_ECC_DIGITS * 64;
+        l_productBits += NUM_ECC_DIGITS * 32;
     }
     else
     {
@@ -126,8 +81,8 @@ void vli_modMult(uint64_t *p_result, uint64_t *p_left, uint64_t *p_right, uint64
        power of two possible while still resulting in a number less than p_left. */
     vli_clear(l_modMultiple);
     vli_clear(l_modMultiple + NUM_ECC_DIGITS);
-    l_digitShift = (l_productBits - l_modBits) / 64;
-    l_bitShift = (l_productBits - l_modBits) % 64;
+    l_digitShift = (l_productBits - l_modBits) / 32;
+    l_bitShift = (l_productBits - l_modBits) % 32;
     if(l_bitShift)
     {
         l_modMultiple[l_digitShift + NUM_ECC_DIGITS] = vli_lshift(l_modMultiple + l_digitShift, p_mod, l_bitShift);
@@ -140,7 +95,7 @@ void vli_modMult(uint64_t *p_result, uint64_t *p_left, uint64_t *p_right, uint64
     /* Subtract all multiples of p_mod to get the remainder. */
     vli_clear(p_result);
     p_result[0] = 1; /* Use p_result as a temp var to store 1 (for subtraction) */
-    while(l_productBits > NUM_ECC_DIGITS * 64 || vli_cmp(l_modMultiple, p_mod) >= 0)
+    while(l_productBits > NUM_ECC_DIGITS * 32 || vli_cmp(l_modMultiple, p_mod) >= 0)
     {
         int l_cmp = vli_cmp(l_modMultiple + NUM_ECC_DIGITS, l_product + NUM_ECC_DIGITS);
         if(l_cmp < 0 || (l_cmp == 0 && vli_cmp(l_modMultiple, l_product) <= 0))
@@ -151,7 +106,7 @@ void vli_modMult(uint64_t *p_result, uint64_t *p_left, uint64_t *p_right, uint64
             }
             vli_sub(l_product + NUM_ECC_DIGITS, l_product + NUM_ECC_DIGITS, l_modMultiple + NUM_ECC_DIGITS);
         }
-        uint64_t l_carry = (l_modMultiple[NUM_ECC_DIGITS] & 0x01) << 63;
+        uint32_t l_carry = (l_modMultiple[NUM_ECC_DIGITS] & 0x01) << 31;
         vli_rshift1(l_modMultiple + NUM_ECC_DIGITS);
         vli_rshift1(l_modMultiple);
         l_modMultiple[NUM_ECC_DIGITS-1] |= l_carry;

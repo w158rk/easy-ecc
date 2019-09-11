@@ -1,12 +1,15 @@
 #include <curves.h>
 #include <field.h>
 
+#ifdef DEBUG 
+#include<stdio.h>
+#endif
 /* Compute a = sqrt(a) (mod curve_p). */
-void mod_sqrt(uint64_t a[NUM_ECC_DIGITS])
+void mod_sqrt(uint32_t a[NUM_ECC_DIGITS])
 {
     unsigned i;
-    uint64_t p1[NUM_ECC_DIGITS] = {1};
-    uint64_t l_result[NUM_ECC_DIGITS] = {1};
+    uint32_t p1[NUM_ECC_DIGITS] = {1};
+    uint32_t l_result[NUM_ECC_DIGITS] = {1};
     
     /* Since curve_p == 3 (mod 4) for all supported curves, we can
        compute sqrt(a) = a^((curve_p + 1) / 4) (mod curve_p). */
