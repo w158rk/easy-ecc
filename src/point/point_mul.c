@@ -65,6 +65,19 @@ void XYcZ_initial_double(uint64_t *X1, uint64_t *Y1, uint64_t *X2, uint64_t *Y2)
  */
 void EccPoint_mult_ladder_advance(EccPoint *p_result, EccPoint *p_point, uint64_t *p_scalar)
 {
+    if(vli_isZero(p_scalar)) {
+        vli_clear(p_result->x);
+        vli_clear(p_result->y);
+        return ;
+    }
+
+    uint16_t len = vli_numBits(p_scalar);
+    if(len==1) {
+        /* scalar = 1 */
+        vli_set(p_result->x, p_point->x);
+        vli_set(p_result->y, p_point->y);
+        return ;
+    }
 
     uint64_t Rx[2][NUM_ECC_DIGITS];
     uint64_t Ry[2][NUM_ECC_DIGITS];
@@ -76,19 +89,6 @@ void EccPoint_mult_ladder_advance(EccPoint *p_result, EccPoint *p_point, uint64_
     vli_set(Ry[0], p_point->y);
 
     XYcZ_initial_double(Rx[0], Ry[0], Rx[1], Ry[1]);        /* R[1] = 2P and R[0] = P */
-
-    #ifdef DEBUG 
-
-    fprintf(stderr, "%d\n", check(Rx[0], Ry[0]));
-    fprintf(stderr, "R[0]");
-    NUM_PRINT(Rx[0]);
-    NUM_PRINT(Ry[0]);
-    fprintf(stderr, "%d\n", check(Rx[1], Ry[1]));
-    fprintf(stderr, "R[1]");
-    NUM_PRINT(Rx[1]);
-    NUM_PRINT(Ry[1]);
-
-    #endif 
 
     for(i = vli_numBits(p_scalar) - 2; i > 0; --i)
     {

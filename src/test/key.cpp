@@ -13,12 +13,12 @@
 #endif
 
 
-#define ERROR(info) { Serial.print("wrong on line"); Serial.println(__LINE__); Serial.println(info);}
+#define ERROR(info) { Serial.print("wrong on line "); Serial.println(__LINE__); Serial.println(info);}
 
 
 
 char p_publicKey[ECC_BYTES+1] = {0}, p_privateKey[ECC_BYTES] = {0};
-char message[ECC_CURVE] = "Lorem ipsum dolor sit amet.";
+char message[ECC_CURVE] = "Lorem ipsum.";
 char * signature;
 size_t m_len = ECC_CURVE;
 char *c, *dm;

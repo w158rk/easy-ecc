@@ -1,29 +1,13 @@
 #include <stdio.h>
 #include <string.h>
 
-<<<<<<< HEAD
 #include <curves.h>
 #include <ecc.h>
 #include <point.h>
 #include <field.h>
 
-#define ERROR(info) fprintf(stderr, "[%s:%d]%s\n    %s\n", __FILE__, \
-                __LINE__, __func__, info) 
 
-#define NUM_PRINT(n) {int i; \
-    for(i=NUM_ECC_DIGITS-1; i>=0; i--) { \
-        if(i%4==3) printf("\n");    \
-        printf("%08lx ", n[i]);       \
-    }               \
-    printf("\n\n");           \
-    }
-
-=======
-#include <avr/curves.h>
-#include <avr/ecc.h>
-#include <avr/point.h>
-#include <avr/field.h>
->>>>>>> dev
+#if ECC_CURVE == spec256r1
 
 #define test_G_32 { \
     {0xF4A13945D898C296ull, 0x77037D812DEB33A0ull, 0xF8BCE6E563A440F2ull, 0x6B17D1F2E12C4247ull}, \
@@ -47,6 +31,7 @@ static EccPoint test_G_d = test_G_2;
 static EccPoint test_S = CONCAT(test_S_, ECC_CURVE);
 static EccPoint test_T = CONCAT(test_T_, ECC_CURVE);
 
+#endif
 
 int test_mult() 
 {
@@ -70,18 +55,19 @@ int test_mult()
 
     /* x 2 */
     int k;
-    for (k=1; k<=64; k++) {
+    for (k=2; k<=20; k++) {
 
         vli_clear(scalar);
         scalar[0] = k;
-        EccPoint_mult(&p, &p, scalar);
+        EccPoint_mult(&p, &curve_G, scalar);
 
+        fprintf(stderr, "k=%d\n", k);
+        NUM_PRINT(p.x);
+        NUM_PRINT(p.y);
+ 
         if(0 == check(p.x, p.y)){
             ERROR("the point calculated is wrong");
-            fprintf(stderr, "k=%d\n", k);
-            NUM_PRINT(p.x);
-            NUM_PRINT(p.y);
-            goto end;
+           goto end;
         }
 
     }
@@ -124,6 +110,7 @@ int test_add()
     printf("\n");
     printf("====================================");
     printf("====================================\n");
+#if ECC_CURVE == spec256r1
 
     EccPoint p;
     EccPoint_add_jacobian(p.x, p.y, test_G.x, test_G.y, test_G_d.x, test_G_d.y);    
@@ -133,7 +120,7 @@ int test_add()
     NUM_PRINT(p.y);
     printf("====================================");
     printf("====================================\n");
-
+#endif
 
     return 1;
 
@@ -144,6 +131,7 @@ end:
 
 int NIST_test() 
 {
+#if ECC_CURVE == spec256r1
 
     EccPoint R;
     EccPoint S = CONCAT(test_S_, ECC_CURVE);
@@ -174,7 +162,7 @@ int NIST_test()
     printf("====================================\n");
 
     check(R.x, R.y);
-
+#endif
 
     return 1;
 

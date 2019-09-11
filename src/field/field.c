@@ -1,6 +1,9 @@
 #include <curves.h>
 #include <field.h>
 
+#ifdef DEBUG 
+#include <stdio.h>
+#endif
 
 void vli_clear(uint64_t *p_vli)
 {
@@ -140,9 +143,21 @@ void ecc_bytes2native(uint64_t p_native[NUM_ECC_DIGITS], const char p_bytes[ECC_
     unsigned i;
     for(i=0; i<NUM_ECC_DIGITS; ++i)
     {
-        const char *p_digit = p_bytes + 8 * (NUM_ECC_DIGITS - 1 - i);
+        const uint8_t *p_digit = p_bytes + 8 * (NUM_ECC_DIGITS - 1 - i);
         p_native[i] = ((uint64_t)p_digit[0] << 56) | ((uint64_t)p_digit[1] << 48) | ((uint64_t)p_digit[2] << 40) | ((uint64_t)p_digit[3] << 32) |
             ((uint64_t)p_digit[4] << 24) | ((uint64_t)p_digit[5] << 16) | ((uint64_t)p_digit[6] << 8) | (uint64_t)p_digit[7];
+        #ifdef DEBUG 
+        printf("%016lx ", (uint64_t)p_digit[0] << 56);
+        printf("%016lx ", (uint64_t)p_digit[1] << 48);
+        printf("%016lx ", (uint64_t)p_digit[2] << 40);
+        printf("%016lx ", (uint64_t)p_digit[3] << 32);
+        printf("%016lx ", (uint64_t)p_digit[4] << 24);
+        printf("%016lx ", (uint64_t)p_digit[5] << 16);
+        printf("%016lx ", (uint64_t)p_digit[6] << 8);
+        printf("%016lx ", (uint64_t)p_digit[7] << 0);
+        printf("%016lx ", p_native[i]);
+        printf("\n ");
+        #endif
     }
 }
 

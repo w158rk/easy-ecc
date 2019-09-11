@@ -92,7 +92,7 @@ void vli_modInv_origin(uint64_t *p_result, uint64_t *p_input, uint64_t *p_mod)
             vli_rshift1(u);
             if(l_carry)         /* overflow, so the first bit should be 1 because there is a carry ahead of the number */
             {
-                u[NUM_ECC_DIGITS-1] |= (1 << 63);
+                u[NUM_ECC_DIGITS-1] |= (1ll << 63);
             }
         }
         else if(EVEN(b))

@@ -21,10 +21,10 @@
 #define ERROR(info) fprintf(stderr, "[%s:%d]%s\n    %s", __FILE__, \
                 __LINE__, __func__, info) 
 
-int ecdsa_verify(const uint8_t p_publicKey[ECC_BYTES+1], 
-                const uint8_t p_message[ECC_BYTES], 
+int ecdsa_verify(const char p_publicKey[ECC_BYTES+1], 
+                const char p_message[ECC_BYTES], 
                 size_t message_len,
-                const uint8_t p_signature[ECC_BYTES*2])
+                const char p_signature[ECC_BYTES*2])
 {
     // check the point
 
@@ -64,7 +64,7 @@ int ecdsa_verify(const uint8_t p_publicKey[ECC_BYTES+1],
         return 0;
     }
 
-    uint8_t *p_hash = sha_256_new(message_len);
+    char *p_hash = sha_256_new(message_len);
     sha_256(p_hash, p_message, message_len);
 
 
@@ -95,9 +95,9 @@ end:
 }
 
 
-int ecdsa_verify_origin(const uint8_t p_publicKey[ECC_BYTES+1], 
-                const uint8_t p_hash[ECC_BYTES], 
-                const uint8_t p_signature[ECC_BYTES*2])
+int ecdsa_verify_origin(const char p_publicKey[ECC_BYTES+1], 
+                const char p_hash[ECC_BYTES], 
+                const char p_signature[ECC_BYTES*2])
 {
     uint64_t u1[NUM_ECC_DIGITS], u2[NUM_ECC_DIGITS];
     uint64_t z[NUM_ECC_DIGITS];

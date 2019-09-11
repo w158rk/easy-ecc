@@ -26,7 +26,7 @@ int ecc_make_key(char p_publicKey[ECC_BYTES+1],
     uint64_t l_private[NUM_ECC_DIGITS];
     EccPoint l_public;
     unsigned l_tries = 0;
-    
+
     do
     {
         if(!getRandomNumber(l_private) || (l_tries++ >= MAX_TRIES))
@@ -49,6 +49,17 @@ int ecc_make_key(char p_publicKey[ECC_BYTES+1],
         EccPoint_mult(&l_public, &curve_G, l_private);
     } while(EccPoint_isZero(&l_public));
     
+    #ifdef DEBUG 
+    ERROR("private key in key making");
+    vli_clear(l_private);
+    l_private[0] = 1;
+    NUM_PRINT(l_private);
+    EccPoint_mult(&l_public, &curve_G, l_private);
+    ERROR("public key in key making");
+    NUM_PRINT(l_public.x);
+    NUM_PRINT(l_public.y);
+    #endif
+
     if(0 == check(l_public.x, l_public.y)) {
         ERROR(" the point generate is not on the curve");
         goto end;

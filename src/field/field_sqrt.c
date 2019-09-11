@@ -1,6 +1,7 @@
 #include <curves.h>
 #include <field.h>
 
+#include<stdio.h>
 /* Compute a = sqrt(a) (mod curve_p). */
 void mod_sqrt(uint64_t a[NUM_ECC_DIGITS])
 {
@@ -13,10 +14,26 @@ void mod_sqrt(uint64_t a[NUM_ECC_DIGITS])
     vli_add(p1, curve_p, p1); /* p1 = curve_p + 1 */
     for(i = vli_numBits(p1) - 1; i > 1; --i)
     {
+        #ifdef DEBUG
+        if(i==351) {
+            ERROR("351");
+            NUM_PRINT(l_result);
+        }        
+        #endif
         vli_modSquare_fast(l_result, l_result);
+        #ifdef DEBUG
+        if(i==351) {
+            NUM_PRINT(l_result);
+        }        
+        #endif
         if(vli_testBit(p1, i))
         {
             vli_modMult_fast(l_result, l_result, a);
+            #ifdef DEBUG
+            if(i==351) {
+                NUM_PRINT(l_result);
+            }        
+            #endif
         }
     }
     vli_set(a, l_result);

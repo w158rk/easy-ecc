@@ -6,12 +6,18 @@
 #define CURVES_H
 
 #include <stdint.h>
+#include <stdio.h>
 
 /* Curve selection options. */
 #define secp128r1 16
 #define secp192r1 24
 #define secp256r1 32
 #define secp384r1 48
+
+#define ECC_CURVE secp128r1
+
+#define ERROR(info) fprintf(stdout, "[%s:%d]%s\n    %s\n", __FILE__, \
+                __LINE__, __func__, info) 
 
 #ifndef ECC_CURVE
     #define ECC_CURVE secp256r1
