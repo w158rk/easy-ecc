@@ -16,19 +16,16 @@
 #include "ecc.h"
 #include "point.h"
 
-#define UMAX(a, b) a>b ? a : b
-#define ERROR(info) fprintf(stderr, "[%s:%d]%s\n    %s", __FILE__, \
-                __LINE__, __func__, info) 
 
-int ecc_decrypt(char **m, size_t *m_len, char *c, 
-                        size_t c_len, char *key)
+uint8_t ecc_decrypt(uint8_t **m, size_t *m_len, uint8_t *c, 
+                        size_t c_len, uint8_t *key)
 {
 
-    size_t num_digit = c_len - ECC_CURVE;
-    char *ret = (char *)malloc(num_digit);
+    size_t num_digit = c_len - ECC_BYTES - 1;
+    uint8_t *ret = (uint8_t *)malloc(num_digit);
 
-    uint64_t sk[NUM_ECC_DIGITS];
-    ecc_bytes2native(sk, key);
+    uint8_t *sk;
+    sk = key;
 
     EccPoint p;
     ecc_point_decompress(&p, c);         /* get the k*G */
@@ -36,29 +33,23 @@ int ecc_decrypt(char **m, size_t *m_len, char *c,
     EccPoint_mult(&p, &p, sk);   /* get the s*kG */
 
     #ifdef DEBUG 
-    printf("decrypt p : \n");
+    ERROR("decrypted sk*k*G");
     NUM_PRINT(p.x);
     NUM_PRINT(p.y);
     #endif
 
-    uint64_t res[NUM_ECC_DIGITS];
-    uint64_t r[NUM_ECC_DIGITS];
-    uint64_t *l = p.x;
+    uint8_t *lpt = p.x;
+    uint8_t *rpt = c + ECC_BYTES + 1;
+    uint8_t *respt = ret;
 
-    char *rpt = c + ECC_CURVE + 1;
-    char *respt = ret;
-
-    int i=0;
+    uint8_t i=0;
     
     for(i=0; i<num_digit; ++i) 
     {
 
-        ecc_bytes2native(r,rpt);
-        vli_xor(res, l, r);
-        ecc_native2bytes(respt, res);
-        
-        rpt += ECC_CURVE;
-        respt += ECC_CURVE;
+        vli_xor(respt, lpt, rpt);
+        rpt += ECC_BYTES;
+        respt += ECC_BYTES;
 
     }
 

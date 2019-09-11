@@ -1,25 +1,26 @@
 #include <stdio.h>
-#include <stdlib.h>
+#include <string.h>
 #include <stdint.h>
 
 #include "curves.h"
 #include "field.h"
 #include "point.h"
 
+// #undef DEBUG
 /* ------ Point operations ------ */
 
 /* Returns 1 if p_point is the point at infinity, 0 otherwise. */
-int EccPoint_isZero(EccPoint *p_point)
+uint8_t EccPoint_isZero(EccPoint *p_point)
 {
     return (vli_isZero(p_point->x) && vli_isZero(p_point->y));
 }
 
 
 /* Modify (x1, y1, ) => (x1 / z^2, y1 / z^3) */
-void divide_z(uint64_t *x, uint64_t *y, uint64_t *X1, uint64_t *Y1, uint64_t *Z)
+void divide_z(uint8_t *x, uint8_t *y, uint8_t *X1, uint8_t *Y1, uint8_t *Z)
 {
-    uint64_t t1[NUM_ECC_DIGITS];
-    uint64_t t2[NUM_ECC_DIGITS];
+    uint8_t t1[ECC_BYTES];
+    uint8_t t2[ECC_BYTES];
 
     vli_modSquare_fast(t1, Z);    /* z^2 */
     vli_modMult_fast(t2, t1, Z);  /* z^3 */
@@ -48,10 +49,10 @@ void divide_z(uint64_t *x, uint64_t *y, uint64_t *X1, uint64_t *Y1, uint64_t *Z)
 /*
     this function is to convert ordinary (x,y) tuples to Jacobian-affine coordinates (X,Y,Z) 
  */
-void mult_z(uint64_t *x, uint64_t *y, uint64_t *X1, uint64_t *Y1, uint64_t *Z)
+void mult_z(uint8_t *x, uint8_t *y, uint8_t *X1, uint8_t *Y1, uint8_t *Z)
 {
-    uint64_t t1[NUM_ECC_DIGITS];
-    uint64_t t2[NUM_ECC_DIGITS];
+    uint8_t t1[ECC_BYTES];
+    uint8_t t2[ECC_BYTES];
 
     vli_modSquare_fast(t1, Z);    /* z^2 */
     vli_modMult_fast(t2, t1, Z);  /* z^3 */
@@ -67,11 +68,11 @@ void mult_z(uint64_t *x, uint64_t *y, uint64_t *X1, uint64_t *Y1, uint64_t *Z)
 }
 
 
-void ecc_point_decompress(EccPoint *p_point, const char p_compressed[ECC_BYTES+1])
+void ecc_point_decompress(EccPoint *p_point, const uint8_t p_compressed[ECC_BYTES+1])
 {   /* get the point from the x coordinate */
-    uint64_t _3[NUM_ECC_DIGITS] = {3}; /* -a = 3 */
-    ecc_bytes2native(p_point->x, p_compressed+1);
-    
+    uint8_t _3[ECC_BYTES] = {3}; /* -a = 3 */
+    memcpy(p_point->x, p_compressed+1, ECC_BYTES);
+
     vli_modSquare_fast(p_point->y, p_point->x); /* y = x^2 */
     vli_modSub(p_point->y, p_point->y, _3, curve_p); /* y = x^2 - 3 */
     vli_modMult_fast(p_point->y, p_point->y, p_point->x); /* y = x^3 - 3x */
@@ -86,31 +87,19 @@ void ecc_point_decompress(EccPoint *p_point, const char p_compressed[ECC_BYTES+1
     }
 }
 
-int check(uint64_t *x, uint64_t *y) {
-    uint64_t _3[NUM_ECC_DIGITS] = {3}; /* -a = 3 */
-    uint64_t _y[NUM_ECC_DIGITS]; /* -a = 3 */
-    uint64_t _y1[NUM_ECC_DIGITS]; /* -a = 3 */
+#undef DEBUG
+
+uint8_t check(uint8_t *x, uint8_t *y) {
+    uint8_t _3[ECC_BYTES] = {3}; /* -a = 3 */
+    uint8_t _y[ECC_BYTES]; /* -a = 3 */
+    uint8_t _y1[ECC_BYTES]; /* -a = 3 */
 
     vli_modSquare_fast(_y, x); /* y = x^2 */
     vli_modSub(_y, _y, _3, curve_p); /* y = x^2 - 3 */
     vli_modMult_fast(_y, _y, x); /* y = x^3 - 3x */
     vli_modAdd(_y, _y, curve_b, curve_p); /* y = x^3 - 3x + b */
 
-    #ifdef DEBUG
-
-    printf("_y : \n");
-    NUM_PRINT(_y);
-
-    #endif
-
     vli_modSquare_fast(_y1, y);
-
-    #ifdef DEBUG
-
-    printf("y : \n");
-    NUM_PRINT(_y1);
-
-    #endif
 
     if( 0 == vli_cmp(_y, _y1))
         return 1;

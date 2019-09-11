@@ -6,15 +6,6 @@
 #include <point.h>
 #include <field.h>
 
-#define ERROR(info) fprintf(stderr, "[%s:%d]%s\n    %s\n", __FILE__, \
-                __LINE__, __func__, info) 
-#define NUM_PRINT(n) {int i; \
-    for(i=NUM_ECC_DIGITS-1; i>=0; i--) { \
-        printf("%ld ", n[i]);       \
-    }               \
-    printf("\n");       \
-}
-
 int test_square() 
 {
 
@@ -22,14 +13,18 @@ int test_square()
     printf("|           test square            |\n");
     printf("------------------------------------\n");
 
-    uint64_t src[NUM_ECC_DIGITS] = {0};
-    uint64_t dest[NUM_ECC_DIGITS] = {0};
-    src[1] = 1;
-    NUM_PRINT(src);
+    uint8_t src[ECC_BYTES] = {0};
+    uint8_t dest[ECC_BYTES] = {0};
+    src[ECC_BYTES-1] = 0xff;
+    src[ECC_BYTES-9] = 0xff;
+    src[ECC_BYTES-17] = 0xff;
+    src[ECC_BYTES-25] = 0xff;
+    src[ECC_BYTES-33] = 0xff;
+    src[ECC_BYTES-41] = 0xff;
 
     /* x 2 */
     int k;
-    for (k=1; k<=20; k++) {
+    for (k=1; k<=1; k++) {
 
 
         src[0] = k;
@@ -56,10 +51,9 @@ int test_multiply()
     printf("|           test multiply            |\n");
     printf("------------------------------------\n");
 
-    uint64_t src1[NUM_ECC_DIGITS] = {0};
-    uint64_t src2[NUM_ECC_DIGITS] = {0};
-    uint64_t dest[NUM_ECC_DIGITS] = {0};
-    src1[1] = 1;
+    uint8_t src1[ECC_BYTES] = {0};
+    uint8_t src2[ECC_BYTES] = {0};
+    uint8_t dest[ECC_BYTES] = {0};
 
     /* x 2 */
     int k, i;
@@ -71,8 +65,11 @@ int test_multiply()
 
         vli_modMult_fast(dest, src1, src2);
 
+        ERROR("multiply");
         NUM_PRINT(src1);
+        ERROR("with");
         NUM_PRINT(src2);
+        ERROR("get");
         NUM_PRINT(dest);
 
         printf("\n");
@@ -89,22 +86,83 @@ end:
 
 }
 
+int test_inv() 
+{
+
+    printf("------------------------------------\n");
+    printf("|           test inversion            |\n");
+    printf("------------------------------------\n");
+
+    uint8_t src1[ECC_BYTES] = {0};
+    uint8_t dest[ECC_BYTES] = {0};
+
+    /* x 2 */
+    int k, i;
+    int lowerbound = 3;
+    int upperbound = 4;
+    for (k=lowerbound; k<upperbound; k++) {
+
+        src1[0] = k;
+
+        vli_modInv(dest, src1, curve_p);
+
+        ERROR("src");
+        NUM_PRINT(src1);
+        ERROR("dest");
+        NUM_PRINT(dest);
+
+        vli_modMult_fast(dest, dest, src1);
+
+        ERROR("multiply");
+        NUM_PRINT(dest);
+
+        printf("\n");
+
+
+    }
+
+
+    return 1;
+
+end:
+    return 0;    
+
+}
+
 
 int main(int argc, char *argv[]) {
 
-    if(0 == test_square()) {
+    // if(0 == test_square()) {
 
-        ERROR("error in square");
-        goto end;
+    //     ERROR("error in square");
+    //     goto end;
 
-    }
+    // }
 
-    if(0 == test_multiply()) {
+    uint8_t v[ECC_BYTES+1];
+    vli_set(v+1, curve_G.x);
+    v[0] = curve_G.y[0] & 0x01 + 2;
+    EccPoint p;
+    ecc_point_decompress(&p, v);
 
-        ERROR("error in add");
-        goto end;
+    NUM_PRINT(p.x);
+    NUM_PRINT(curve_G.x);
+    NUM_PRINT(p.y);
+    NUM_PRINT(curve_G.y);
 
-    }
+    // if(0 == test_multiply()) {
+
+    //     ERROR("error in multiplication");
+    //     goto end;
+
+    // }
+
+    // if(0 == test_inv()) {
+
+    //     ERROR("error in inversion");
+    //     goto end;
+
+    // }
 
     return 0;
 end:

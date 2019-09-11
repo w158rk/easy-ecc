@@ -17,11 +17,8 @@
 #include "point.h"
 #include "hash.h"
 
-#define UMAX(a, b) a>b ? a : b
-#define ERROR(info) fprintf(stderr, "[%s:%d]%s\n    %s", __FILE__, \
-                __LINE__, __func__, info) 
 
-int ecdsa_verify(const uint8_t p_publicKey[ECC_BYTES+1], 
+uint8_t ecdsa_verify(const uint8_t p_publicKey[ECC_BYTES+1], 
                 const uint8_t p_message[ECC_BYTES], 
                 size_t message_len,
                 const uint8_t p_signature[ECC_BYTES*2])
@@ -45,14 +42,11 @@ int ecdsa_verify(const uint8_t p_publicKey[ECC_BYTES+1],
 
     }
 
-    uint64_t u1[NUM_ECC_DIGITS], u2[NUM_ECC_DIGITS];
-    uint64_t z[NUM_ECC_DIGITS];
-    uint64_t rx[NUM_ECC_DIGITS];
+    uint8_t u1[ECC_BYTES], u2[ECC_BYTES];
+    uint8_t z[ECC_BYTES];
+    uint8_t rx[ECC_BYTES];
     
-    uint64_t l_r[NUM_ECC_DIGITS], l_s[NUM_ECC_DIGITS];
-
-    ecc_bytes2native(l_r, p_signature);
-    ecc_bytes2native(l_s, p_signature + ECC_BYTES);
+    uint8_t *l_r=p_signature, *l_s=p_signature+ECC_BYTES;
     
     if(vli_isZero(l_r) || vli_isZero(l_s))
     { /* r, s must not be 0. */
@@ -63,19 +57,70 @@ int ecdsa_verify(const uint8_t p_publicKey[ECC_BYTES+1],
     { /* r, s must be < n. */
         return 0;
     }
-
+#if ECC_CURVE == secp384r1
+    uint8_t p_hash[ECC_BYTES] = {0};
+    memcpy(p_hash, p_message, message_len>ECC_BYTES ? ECC_BYTES : message_len );
+#else
     uint8_t *p_hash = sha_256_new(message_len);
     sha_256(p_hash, p_message, message_len);
-
+#endif
+    #ifdef DEBUG
+    ERROR("[verify] hash value");
+    NUM_PRINT(p_hash);
+    #endif
+    #ifdef DEBUG 
+    ERROR("curve_G");
+    NUM_PRINT(curve_G.x);
+    u1[0] = 1;
+    #endif
 
     /* Calculate u1 and u2. */
     vli_modInv(z, l_s, curve_n); /* Z = s^-1 */
-    ecc_bytes2native(u1, p_hash);
-    vli_modMult(u1, u1, z, curve_n); /* u1 = e/s */
+    // vli_modInv(z, l_s, curve_p); /* Z = s^-1 */
+    #ifdef DEBUG 
+    ERROR("1/s");
+    NUM_PRINT(z);
+    ERROR("r");
+    NUM_PRINT(l_r);
+    #endif
+    // vli_modMult_fast(u1, p_hash, z); /* u1 = e/s */
+    vli_modMult(u1, p_hash, z, curve_n); /* u1 = e/s */
+    // vli_modMult_fast(u2, l_r, z); /* u2 = r/s */
     vli_modMult(u2, l_r, z, curve_n); /* u2 = r/s */
 
+    #ifdef DEBUG 
+    ERROR("u1");
+    NUM_PRINT(u1);
+    ERROR("u2");
+    NUM_PRINT(u2);
+    #endif
+
+    #ifdef DEBUG 
+    ERROR("curve_G1");
+    NUM_PRINT(curve_G.x);
+    #endif
+
     EccPoint_mult(&l_sum, &curve_G, u1);
+
+    #ifdef DEBUG 
+    ERROR("u1 * curve_G");
+    NUM_PRINT(l_sum.x);
+    #endif
+
+    #ifdef DEBUG 
+    ERROR("l_public");
+    NUM_PRINT(l_public.x);
+    ERROR("u2");
+    NUM_PRINT(u2);
+    #endif
+
     EccPoint_mult(&l_public, &l_public, u2);
+
+    #ifdef DEBUG 
+    ERROR("u2 * l_public");
+    NUM_PRINT(l_public.x);
+    #endif
+
     EccPoint_add_jacobian(l_sum.x, l_sum.y, l_sum.x, l_sum.y, l_public.x, l_public.y);
     
     vli_set(rx, l_sum.x);
@@ -84,6 +129,11 @@ int ecdsa_verify(const uint8_t p_publicKey[ECC_BYTES+1],
     {
         vli_sub(rx, rx, curve_n);
     }
+    #ifdef DEBUG
+    ERROR("result of verification"); 
+    NUM_PRINT(rx);
+    NUM_PRINT(l_r);
+    #endif
 
     if (0 == vli_cmp(rx, l_r)) {
         return 1;
@@ -94,90 +144,3 @@ end:
 
 }
 
-
-int ecdsa_verify_origin(const uint8_t p_publicKey[ECC_BYTES+1], 
-                const uint8_t p_hash[ECC_BYTES], 
-                const uint8_t p_signature[ECC_BYTES*2])
-{
-    uint64_t u1[NUM_ECC_DIGITS], u2[NUM_ECC_DIGITS];
-    uint64_t z[NUM_ECC_DIGITS];
-    EccPoint l_public, l_sum;
-    uint64_t rx[NUM_ECC_DIGITS];
-    uint64_t ry[NUM_ECC_DIGITS];
-    uint64_t tx[NUM_ECC_DIGITS];
-    uint64_t ty[NUM_ECC_DIGITS];
-    uint64_t tz[NUM_ECC_DIGITS];
-    
-    uint64_t l_r[NUM_ECC_DIGITS], l_s[NUM_ECC_DIGITS];
-    
-    ecc_point_decompress(&l_public, p_publicKey);
-    ecc_bytes2native(l_r, p_signature);
-    ecc_bytes2native(l_s, p_signature + ECC_BYTES);
-    
-    if(vli_isZero(l_r) || vli_isZero(l_s))
-    { /* r, s must not be 0. */
-        return 0;
-    }
-    
-    if(vli_cmp(curve_n, l_r) != 1 || vli_cmp(curve_n, l_s) != 1)
-    { /* r, s must be < n. */
-        return 0;
-    }
-
-    /* Calculate u1 and u2. */
-    vli_modInv(z, l_s, curve_n); /* Z = s^-1 */
-    ecc_bytes2native(u1, p_hash);
-    vli_modMult(u1, u1, z, curve_n); /* u1 = e/s */
-    vli_modMult(u2, l_r, z, curve_n); /* u2 = r/s */
-    
-    /* Calculate l_sum = G + Q. */
-    vli_set(l_sum.x, l_public.x);
-    vli_set(l_sum.y, l_public.y);
-    vli_set(tx, curve_G.x);
-    vli_set(ty, curve_G.y);
-    vli_modSub(z, l_sum.x, tx, curve_p); /* Z = x2 - x1 */
-    XYcZ_add(tx, ty, l_sum.x, l_sum.y);
-    vli_modInv(z, z, curve_p); /* Z = 1/Z */
-    mult_z(l_sum.x, l_sum.y, l_sum.x, l_sum.y, z);
-    
-    /* Use Shamir's trick to calculate u1*G + u2*Q */
-    EccPoint *l_points[4] = {NULL, &curve_G, &l_public, &l_sum};
-    uint l_numBits = UMAX(vli_numBits(u1), vli_numBits(u2));
-    
-    EccPoint *l_point = l_points[(!!vli_testBit(u1, l_numBits-1)) | ((!!vli_testBit(u2, l_numBits-1)) << 1)];
-    vli_set(rx, l_point->x);
-    vli_set(ry, l_point->y);
-    // vli_clear(z);
-    // z[0] = 1;
-
-    int i;
-    for(i = l_numBits - 2; i >= 0; --i)
-    {
-        EccPoint_double_jacobian(rx, ry, rx, ry);
-        
-        int l_index = (!!vli_testBit(u1, i)) | ((!!vli_testBit(u2, i)) << 1);
-        EccPoint *l_point = l_points[l_index];
-        if(l_point)
-        {
-            vli_set(tx, l_point->x);
-            vli_set(ty, l_point->y);
-            mult_z(rx, ry, rx, ry, z);
-            vli_modSub(tz, rx, tx, curve_p); /* Z = x2 - x1 */
-            XYcZ_add(tx, ty, rx, ry);
-            vli_modMult_fast(z, z, tz);
-        }
-    }
-
-    vli_modInv(z, z, curve_p); /* Z = 1/Z */
-    mult_z(rx, ry, rx, ry, z);
-    
-    /* v = x1 (mod n) */
-    if(vli_cmp(curve_n, rx) != 1)
-    {
-        vli_sub(rx, rx, curve_n);
-    }
-
-    /* Accept only if v == r. */
-    return (vli_cmp(rx, l_r) == 0);
-}
- 

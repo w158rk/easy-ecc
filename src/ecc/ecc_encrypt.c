@@ -19,24 +19,23 @@
 #define UMAX(a, b) a>b ? a : b
 #define ERROR(info) fprintf(stderr, "[%s:%d]%s\n    %s", __FILE__, \
                 __LINE__, __func__, info) 
- 
 
-int ecc_encrypt(char **c, size_t *c_len, 
-                char *m, size_t m_len, char *key) {
+uint8_t ecc_encrypt(uint8_t **c, size_t *c_len, 
+                uint8_t *m, size_t m_len, uint8_t *key) {
 
-    if(0 != m_len % ECC_CURVE) {
-        ERROR("the length of the message must be a multiple of ECC_CURVE");
+    if(0 != m_len % ECC_BYTES) {
+        ERROR("the length of the message must be a multiple of ECC_BYTES");
         goto end;
     }
 
     /* choose a random k */
-    uint64_t k[NUM_ECC_DIGITS];
-    uint64_t l_tmp[NUM_ECC_DIGITS];
-    uint64_t l_s[NUM_ECC_DIGITS];
+    uint8_t k[ECC_BYTES];
+    uint8_t l_tmp[ECC_BYTES];
+    uint8_t l_s[ECC_BYTES];
     EccPoint p;
     EccPoint pk_point;
-    unsigned l_tries = 0;
-    int j;
+    uint8_t l_tries = 0;
+    uint8_t j;
     
     do
     {
@@ -58,64 +57,67 @@ int ecc_encrypt(char **c, size_t *c_len,
         /* pk = k * pk*/
         /* p = k * G*/
         ecc_point_decompress(&pk_point, key);        
-
-        EccPoint_mult(&pk_point, &pk_point, k);
-
         if( 0 == check(pk_point.x, pk_point.y)) {
             ERROR(" the pk_point is not on the curve");
             goto end;
         }
 
-        EccPoint_mult(&p, &curve_G, k);
+        #ifdef DEBUG 
+        ERROR("public key used");
+        NUM_PRINT(pk_point.x);
+        NUM_PRINT(pk_point.y);
+        #endif
+
+
+        EccPoint_mult(&pk_point, &pk_point, k);
 
         if( 0 == check(pk_point.x, pk_point.y)) {
-            ERROR(" p is not on the curve");
+            ERROR(" k * pk_point is not on the curve");
             goto end;
         }
 
-        #ifdef DEBUG 
-        printf("pk_point : ");
-        NUM_PRINT(pk_point.x);
-        NUM_PRINT(pk_point.y);
-        printf("p : ");
-        NUM_PRINT(p.x);
-        NUM_PRINT(p.y);
-        #endif
+        EccPoint_mult(&p, &curve_G, k);
 
+        if( 0 == check(p.x, p.y)) {
+            ERROR(" p is not on the curve");
+            goto end;
+        }
     
     } while(vli_isZero(p.x) || vli_isZero(pk_point.x));
 
-    int digit_cnt = m_len / ECC_CURVE;
-    int i=0;
+    #ifdef DEBUG 
+    ERROR("k * pk");
+    NUM_PRINT(pk_point.x);
+    NUM_PRINT(pk_point.y);
+    ERROR("k * G");
+    NUM_PRINT(p.x);
+    NUM_PRINT(p.y);
+    #endif
 
-    uint64_t r[NUM_ECC_DIGITS];
-    uint64_t res[NUM_ECC_DIGITS];
-    uint64_t *l = pk_point.x;
+    uint8_t digit_cnt = m_len / ECC_BYTES;
+    uint8_t i=0;
 
-    char * ret = (char *)malloc(ECC_CURVE + m_len + 1);
-    
-    char * mask = (char *)malloc(ECC_CURVE);
+    uint8_t * ret = (uint8_t *)malloc(ECC_BYTES + m_len + 1);
     
     /* cipher and the random point */
-    ecc_native2bytes(ret+1, p.x);
     ret[0] = 2 + (p.y[0] & 0x01);
+    memcpy(ret+1, p.x, ECC_BYTES);
     
     /* copy the cipher */ 
-    char *respt = ret + ECC_CURVE + 1;
-    char *rpt = m;
+    uint8_t *lpt = pk_point.x;
+    uint8_t *respt = ret + ECC_BYTES + 1;
+    uint8_t *rpt = m;
     
     for(i=1; i<=digit_cnt; ++i) 
     {
         
-        ecc_bytes2native(r, rpt);
-        vli_xor(res, l, r);
-        ecc_native2bytes(respt, res);
+        vli_xor(respt, lpt, rpt);
         
-        rpt += ECC_CURVE;
-        respt += ECC_CURVE;
+        rpt += ECC_BYTES;
+        respt += ECC_BYTES ;
     }
 
-    *c_len = m_len + ECC_CURVE;
+    *c_len = m_len + ECC_BYTES + 1;
     *c = ret;
     return 1;
 

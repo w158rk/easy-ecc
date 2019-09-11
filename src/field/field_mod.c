@@ -1,72 +1,174 @@
 #include <curves.h>
 #include <field.h>
 
+#include<string.h>
 
-#define HIGH_HALF_MASK  0xffffffff00000000ull
-#define LOW_HALF_MASK   0x00000000ffffffffull
+#undef DEBUG 
+#ifdef DEBUG 
+#include<stdio.h>
+#endif
+
 
 #if ECC_CURVE == secp128r1
 
 /* Computes p_result = p_product % curve_p.
    See algorithm 5 and 6 from http://www.isys.uni-klu.ac.at/PDF/2001-0126-MT.pdf */
-void vli_mmod_fast(uint64_t *p_result, uint64_t *p_product)
+void vli_mmod_fast(uint8_t *p_result, uint8_t *p_product)
 {
-    uint64_t l_tmp[NUM_ECC_DIGITS];
-    int l_carry;
-    
+
+    uint8_t l_tmp[ECC_BYTES];
+    uint8_t l_carry;
+
+
     vli_set(p_result, p_product);
-    
-    l_tmp[0] = p_product[2];
-    l_tmp[1] = (p_product[3] & 0x1FFFFFFFFull) | (p_product[2] << 33);
+
+    #ifdef DEBUG
+    NUM_PRINT(p_result);
+    #endif
+
+    memcpy(l_tmp, p_product+16, 12);
+    l_tmp[15] = (p_product[19] << 1) | (p_product[18] >> 7);
+    l_tmp[14] = (p_product[18] << 1) | (p_product[17] >> 7);
+    l_tmp[13] = (p_product[17] << 1) | (p_product[16] >> 7);
+    l_tmp[12] = (p_product[16] << 1) | (p_product[28] & 0x01);
     l_carry = vli_add(p_result, p_result, l_tmp);
-    
-    l_tmp[0] = (p_product[2] >> 31) | (p_product[3] << 33);
-    l_tmp[1] = (p_product[3] >> 31) | ((p_product[2] & 0xFFFFFFFF80000000ull) << 2);
+
+    #ifdef DEBUG
+    ERROR("tmp1");
+    NUM_PRINT(l_tmp);
+    NUM_PRINT(p_result);
+    #endif
+
+    l_tmp[15] = (p_product[23]<<2) | (p_product[22]>>6);
+    l_tmp[14] = (p_product[22]<<2) | (p_product[21]>>6);
+    l_tmp[13] = (p_product[21]<<2) | (p_product[20]>>6);
+    l_tmp[12] = (p_product[20]<<2) | ((p_product[19]>>6) & 0x3e) | (p_product[31]>>7);
+    l_tmp[11] = (p_product[31]<<1) | (p_product[30]>>7);
+    l_tmp[10] = (p_product[30]<<1) | (p_product[29]>>7);
+    l_tmp[9] = (p_product[29]<<1) | (p_product[28]>>7);
+    l_tmp[8] = (p_product[28]<<1) | (p_product[27]>>7);
+
+    l_tmp[7] = (p_product[27] << 1) | (p_product[26] >> 7);
+    l_tmp[6] = (p_product[26] << 1) | (p_product[25] >> 7);
+    l_tmp[5] = (p_product[25] << 1) | (p_product[24] >> 7);
+    l_tmp[4] = (p_product[24] << 1) | (p_product[23] >> 7);
+    l_tmp[3] = (p_product[23] << 1) | (p_product[22] >> 7);
+    l_tmp[2] = (p_product[22] << 1) | (p_product[21] >> 7);
+    l_tmp[1] = (p_product[21] << 1) | (p_product[20] >> 7);
+    l_tmp[0] = (p_product[20] << 1) | (p_product[19] >> 7);
     l_carry += vli_add(p_result, p_result, l_tmp);
-    
-    l_tmp[0] = (p_product[2] >> 62) | (p_product[3] << 2);
-    l_tmp[1] = (p_product[3] >> 62) | ((p_product[2] & 0xC000000000000000ull) >> 29) | (p_product[3] << 35);
+
+    #ifdef DEBUG
+    ERROR("tmp2");
+    NUM_PRINT(l_tmp);
+    NUM_PRINT(p_result);
+    #endif
+
+    l_tmp[0] = (p_product[24]<<2) | (p_product[23]>>6);
+    l_tmp[1] = (p_product[25]<<2) | (p_product[24]>>6);
+    l_tmp[2] = (p_product[26]<<2) | (p_product[25]>>6);
+    l_tmp[3] = (p_product[27]<<2) | (p_product[26]>>6);
+    l_tmp[4] = (p_product[28]<<2) | (p_product[27]>>6);
+    l_tmp[5] = (p_product[29]<<2) | (p_product[28]>>6);
+    l_tmp[6] = (p_product[30]<<2) | (p_product[29]>>6);
+    l_tmp[7] = (p_product[31]<<2) | (p_product[30]>>6);
+    l_tmp[15] = (p_product[27]<<3) | (p_product[26]>>5);
+    l_tmp[14] = (p_product[26]<<3) | (p_product[25]>>5);
+    l_tmp[13] = (p_product[25]<<3) | (p_product[24]>>5);
+    l_tmp[12] = (p_product[24]<<3) | ((p_product[23]>>5) & 0xfe);
+    l_tmp[11] = 0;
+    l_tmp[10] = 0;
+    l_tmp[9] = 0;
+    l_tmp[8] = p_product[31] >> 6;
     l_carry += vli_add(p_result, p_result, l_tmp);
-    
-    l_tmp[0] = (p_product[3] >> 29);
-    l_tmp[1] = ((p_product[3] & 0xFFFFFFFFE0000000ull) << 4);
+
+    #ifdef DEBUG
+    ERROR("tmp3");
+    NUM_PRINT(l_tmp);
+    NUM_PRINT(p_result);
+    #endif
+
+    l_tmp[7] = 0;
+    l_tmp[6] = 0;
+    l_tmp[5] = 0;
+    l_tmp[4] = p_product[31] >> 5;
+    l_tmp[3] = (p_product[31]<<3) | (p_product[30]>>5);
+    l_tmp[2] = (p_product[30]<<3) | (p_product[29]>>5);
+    l_tmp[1] = (p_product[29]<<3) | (p_product[28]>>5);
+    l_tmp[0] = (p_product[28]<<3) | (p_product[27]>>5);
+    l_tmp[15] = (p_product[31]<<4) | (p_product[30]>>4);
+    l_tmp[14] = (p_product[30]<<4) | (p_product[29]>>4);
+    l_tmp[13] = (p_product[29]<<4) | (p_product[28]>>4);
+    l_tmp[12] = (p_product[28]<<4) | (p_product[27]>>4) & 0xfe;
+    l_tmp[11] = 0;
+    l_tmp[10] = 0;
+    l_tmp[9] = 0;
+    l_tmp[8] = 0;
     l_carry += vli_add(p_result, p_result, l_tmp);
-    
-    l_tmp[0] = (p_product[3] >> 60);
-    l_tmp[1] = (p_product[3] & 0xFFFFFFFE00000000ull);
+
+    #ifdef DEBUG
+    ERROR("tmp4");
+    NUM_PRINT(l_tmp);
+    NUM_PRINT(p_result);
+    #endif
+
+    vli_clear(l_tmp);
+    l_tmp[0] = p_product[31] >> 4;
+    l_tmp[15] = p_product[31];
+    l_tmp[14] = p_product[30];
+    l_tmp[13] = p_product[29];
+    l_tmp[12] = p_product[28] & 0xfe;
     l_carry += vli_add(p_result, p_result, l_tmp);
-    
-    l_tmp[0] = 0;
-    l_tmp[1] = ((p_product[3] & 0xF000000000000000ull) >> 27);
+
+    #ifdef DEBUG
+    ERROR("tmp5");
+    NUM_PRINT(l_tmp);
+    NUM_PRINT(p_result);
+    #endif
+
+    vli_clear(l_tmp);
+    l_tmp[12] = (p_product[31]&0xf0) >> 3;
     l_carry += vli_add(p_result, p_result, l_tmp);
-    
+
+    #ifdef DEBUG
+    ERROR("tmp6");
+    NUM_PRINT(l_tmp);
+    NUM_PRINT(p_result);
+    #endif
+
     while(l_carry || vli_cmp(curve_p, p_result) != 1)
     {
         l_carry -= vli_sub(p_result, p_result, curve_p);
     }
+
+    #ifdef DEBUG
+    ERROR("final result of mod");
+    NUM_PRINT(p_result);
+    #endif
+
 }
 
 #elif ECC_CURVE == secp192r1
 
 /* Computes p_result = p_product % curve_p.
    See algorithm 5 and 6 from http://www.isys.uni-klu.ac.at/PDF/2001-0126-MT.pdf */
-void vli_mmod_fast(uint64_t *p_result, uint64_t *p_product)
+void vli_mmod_fast(uint8_t *p_result, uint8_t *p_product)
 {
-    uint64_t l_tmp[NUM_ECC_DIGITS];
-    int l_carry;
+    uint8_t l_tmp[ECC_BYTES];
+    uint8_t l_carry;
     
     vli_set(p_result, p_product);
-    
-    vli_set(l_tmp, &p_product[3]);
+    vli_set(l_tmp, p_product + 3*8);
     l_carry = vli_add(p_result, p_result, l_tmp);
     
-    l_tmp[0] = 0;
-    l_tmp[1] = p_product[3];
-    l_tmp[2] = p_product[4];
+    vli_clear(l_tmp);
+    memcpy(l_tmp + 8, p_product + 3*8, 8);
+    memcpy(l_tmp + 2*8, p_product + 4*8, 8);
     l_carry += vli_add(p_result, p_result, l_tmp);
     
-    l_tmp[0] = l_tmp[1] = p_product[5];
-    l_tmp[2] = 0;
+    vli_clear(l_tmp);
+    memcpy(l_tmp, p_product + 5*8, 8);
+    memcpy(l_tmp + 8, p_product + 5*8, 8);
     l_carry += vli_add(p_result, p_result, l_tmp);
     
     while(l_carry || vli_cmp(curve_p, p_result) != 1)
@@ -77,152 +179,66 @@ void vli_mmod_fast(uint64_t *p_result, uint64_t *p_product)
 
 #elif ECC_CURVE == secp256r1
 
-/* Computes p_result = p_product % curve_p
-   from http://www.nsa.gov/ia/_files/nist-routines.pdf */
-/**
- * @brief mp_mod_256(r,a)
- * @p_result 256 bits 
- * @p_product 256 bits
- */
-
-void vli_mmod_slow(uint64_t *p_result, uint64_t *p_product)
+void vli_mmod_fast(uint8_t *p_result, uint8_t *p_product)
 {
-    // mod by substract 
-    uint64_t expand_p[2 * NUM_ECC_DIGITS] = {0};
-    uint64_t expand_tmp[2 * NUM_ECC_DIGITS] = {0};    
-    uint64_t expand_result[2 * NUM_ECC_DIGITS] = {0};
-    
-    int i;
-    for (i=0; i<NUM_ECC_DIGITS; i++){
-        expand_p[i] = curve_p[i];
-    }
-    
-    #ifdef DEBUG 
-        printf("expanded p");
-        LONG_NUM_PRINT(expand_p);
-    #endif
-
-    for (i=0; i<NUM_ECC_DIGITS*2; i++){
-        expand_result[i] = p_product[i];
-    }
-
-    #ifdef DEBUG 
-        printf("expanded result");
-        LONG_NUM_PRINT(expand_result);
- 
-        printf("expanded result higher bits");
-        uint64_t *p = expand_result + NUM_ECC_DIGITS;
-        NUM_PRINT(p);
-
-        printf("is zero ? :  %d\n", vli_isZero(expand_result+NUM_ECC_DIGITS));
-    #endif
-
-
-    while(0 == vli_isZero(expand_result+NUM_ECC_DIGITS) || 1 != vli_cmp(curve_p, expand_result)) {
-
-        uint len = vli_numBits(expand_result + NUM_ECC_DIGITS)-1;
-
-        // #ifdef DEBUG 
-        // printf("%d\n", len);
-        // #endif
-
-        vli_clear(expand_tmp+4);
-        vli_clear(expand_tmp);
-        // left shift
-        uint64_t carry = vli_lshift(expand_tmp+len/64, expand_p, len%64);
-        expand_tmp[len/64+4] = carry;
-
-        uint64_t l_borrow = 0;
-        uint i;
-        for(i=0; i<NUM_ECC_DIGITS * 2; ++i)
-        {
-            uint64_t l_diff = expand_result[i] - expand_tmp[i] - l_borrow;
-            l_borrow = (l_diff > expand_result[i]);
-            expand_result[i] = l_diff;
-        }
-
-        #ifdef DEBUG 
-        printf("expanded tmp");
-        LONG_NUM_PRINT(expand_tmp);
-        printf("expanded result");
-        LONG_NUM_PRINT(expand_result);
-        #endif
-
-
-    }
-
-    #ifdef DEBUG 
-    printf("finish \n");
-    #endif
-
-    vli_set(p_result, expand_result);
-
-
-}
-
-void vli_mmod_fast(uint64_t *p_result, uint64_t *p_product)
-{
-    uint64_t l_tmp[NUM_ECC_DIGITS];
-    int l_carry;
+    uint8_t l_tmp[ECC_BYTES];
+    int8_t l_carry;
     
     /* t */
     vli_set(p_result, p_product);
     
     /* s1 */
-    l_tmp[0] = 0;
-    l_tmp[1] = p_product[5] & HIGH_HALF_MASK;
-    l_tmp[2] = p_product[6];
-    l_tmp[3] = p_product[7];
+    memset(l_tmp, 0, 3*4);
+    memcpy(l_tmp + 3*4, p_product + 11*4, 5*4);
     l_carry = vli_lshift(l_tmp, l_tmp, 1);
     l_carry += vli_add(p_result, p_result, l_tmp);
     
     /* s2 */
-    l_tmp[1] = p_product[6] << 32;
-    l_tmp[2] = (p_product[6] >> 32) | (p_product[7] << 32);
-    l_tmp[3] = p_product[7] >> 32;
+    memcpy(l_tmp + 3*4, p_product + 12*4, 4*4);    
+    memset(l_tmp + 7*4, 0, 4);
     l_carry += vli_lshift(l_tmp, l_tmp, 1);
     l_carry += vli_add(p_result, p_result, l_tmp);
     
     /* s3 */
-    l_tmp[0] = p_product[4];
-    l_tmp[1] = p_product[5] & LOW_HALF_MASK;
-    l_tmp[2] = 0;
-    l_tmp[3] = p_product[7];
+    memcpy(l_tmp, p_product + 8*4, 3*4);
+    memset(l_tmp + 3*4, 0, 3*4);
+    memcpy(l_tmp + 6*4, p_product + 14*4, 2*4);
     l_carry += vli_add(p_result, p_result, l_tmp);
     
     /* s4 */
-    l_tmp[0] = (p_product[4] >> 32) | (p_product[5] << 32);
-    l_tmp[1] = (p_product[5] >> 32) | (p_product[6] & HIGH_HALF_MASK);
-    l_tmp[2] = p_product[7];
-    l_tmp[3] = (p_product[6] >> 32) | (p_product[4] << 32);
+    memcpy(l_tmp, p_product + 9*4, 3*4);
+    memcpy(l_tmp + 3*4, p_product + 13*4, 3*4);
+    memcpy(l_tmp + 6*4, p_product + 13*4, 4);
+    memcpy(l_tmp + 7*4, p_product + 8*4, 4);
     l_carry += vli_add(p_result, p_result, l_tmp);
     
     /* d1 */
-    l_tmp[0] = (p_product[5] >> 32) | (p_product[6] << 32);
-    l_tmp[1] = (p_product[6] >> 32);
-    l_tmp[2] = 0;
-    l_tmp[3] = (p_product[4] & LOW_HALF_MASK) | (p_product[5] << 32);
+    memcpy(l_tmp, p_product + 11*4, 3*4);
+    memset(l_tmp + 3*4, 0, 3*4);
+    memcpy(l_tmp + 6*4, p_product + 8*4, 4);
+    memcpy(l_tmp + 7*4, p_product + 10*4, 4);
     l_carry -= vli_sub(p_result, p_result, l_tmp);
     
     /* d2 */
-    l_tmp[0] = p_product[6];
-    l_tmp[1] = p_product[7];
-    l_tmp[2] = 0;
-    l_tmp[3] = (p_product[4] >> 32) | (p_product[5] & HIGH_HALF_MASK);
+    memcpy(l_tmp, p_product + 12*4, 4*4);
+    memset(l_tmp + 4*4, 0, 2*4);
+    memcpy(l_tmp + 6*4, p_product + 9*4, 4);
+    memcpy(l_tmp + 7*4, p_product + 11*4, 4);
     l_carry -= vli_sub(p_result, p_result, l_tmp);
     
     /* d3 */
-    l_tmp[0] = (p_product[6] >> 32) | (p_product[7] << 32);
-    l_tmp[1] = (p_product[7] >> 32) | (p_product[4] << 32);
-    l_tmp[2] = (p_product[4] >> 32) | (p_product[5] << 32);
-    l_tmp[3] = (p_product[6] << 32);
+    memcpy(l_tmp, p_product + 13*4, 3*4);
+    memcpy(l_tmp + 3*4, p_product + 8*4, 3*4);
+    memset(l_tmp + 6*4, 0, 4);
+    memcpy(l_tmp + 7*4, p_product + 12*4, 4);
     l_carry -= vli_sub(p_result, p_result, l_tmp);
     
     /* d4 */
-    l_tmp[0] = p_product[7];
-    l_tmp[1] = p_product[4] & HIGH_HALF_MASK;
-    l_tmp[2] = p_product[5];
-    l_tmp[3] = p_product[6] & HIGH_HALF_MASK;
+    memcpy(l_tmp, p_product + 14*4, 2*4);
+    memset(l_tmp + 2*4, 0, 4);
+    memcpy(l_tmp + 3*4, p_product + 9*4, 3*4);
+    memset(l_tmp + 6*4, 0, 4);
+    memcpy(l_tmp + 7*4, p_product + 13*4, 4);
     l_carry -= vli_sub(p_result, p_result, l_tmp);
     
     if(l_carry < 0)
@@ -243,54 +259,144 @@ void vli_mmod_fast(uint64_t *p_result, uint64_t *p_product)
 
 #elif ECC_CURVE == secp384r1
 
-void omega_mult(uint64_t *p_result, uint64_t *p_right)
+void omega_mult(uint8_t *p_result, uint8_t *p_right)
 {
-    uint64_t l_tmp[NUM_ECC_DIGITS];
-    uint64_t l_carry, l_diff;
+
+    #ifdef DEBUG 
+    ERROR("begin");
+    NUM_PRINT(p_right);
+    #endif
+
+    uint8_t l_tmp[ECC_BYTES] = {0};
+    uint8_t l_tmp1[ECC_BYTES] = {0};
+    uint64_t l_carry, l_diff, l_carry1, l_diff1;
     
     /* Multiply by (2^128 + 2^96 - 2^32 + 1). */
     vli_set(p_result, p_right); /* 1 */
-    l_carry = vli_lshift(l_tmp, p_right, 32);
-    p_result[1 + NUM_ECC_DIGITS] = l_carry + vli_add(p_result + 1, p_result + 1, l_tmp); /* 2^96 + 1 */
-    p_result[2 + NUM_ECC_DIGITS] = vli_add(p_result + 2, p_result + 2, p_right); /* 2^128 + 2^96 + 1 */
+    // shift left by 32 bit
+    uint8_t i;
+    for (i=0; i<ECC_BYTES-4; i++) {
+        l_tmp[i+4] = p_right[i];
+    }
+
+    l_carry = (uint64_t) p_right[ECC_BYTES-4];
+    l_carry |= (uint64_t) p_right[ECC_BYTES-3] << 8;
+    l_carry |= (uint64_t) p_right[ECC_BYTES-2] << 16 ;
+    l_carry |= (uint64_t) p_right[ECC_BYTES-1] << 24;
+    #ifdef DEBUG 
+    ERROR("l_carry");
+    printf("%08x\n", l_carry);
+    #endif
+
+    l_carry1 = l_carry + vli_add(p_result + 8, p_result + 8, l_tmp); /* 2^96 + 1 */
+    #ifdef DEBUG 
+    ERROR("p_result");
+    NUM_PRINT(p_result);
+    ERROR("l_carry1");
+    printf("%016lx\n", l_carry1);
+    #endif
+    uint8_t *p = p_result + ECC_BYTES + 8;
+    p[0] = (uint8_t) l_carry1;
+    p[1] = (uint8_t) (l_carry1 >> 8);
+    p[2] = (uint8_t) (l_carry1 >> 16);
+    p[3] = (uint8_t) (l_carry1 >> 24);
+    p[4] = (uint8_t) (l_carry1 >> 32);
+
+    l_carry1 = vli_add(p_result + 2*8, p_result + 2*8, p_right); /* 2^128 + 2^96 + 1 */
+    #ifdef DEBUG 
+    ERROR("p_result");
+    NUM_PRINT(p_result);
+    #endif
+    p = p_result + ECC_BYTES + 2*8;
+    p[0] = (uint8_t) l_carry1;
+    p[1] = (uint8_t) (l_carry1 >> 8);
+    p[2] = (uint8_t) (l_carry1 >> 16);
+    p[3] = (uint8_t) (l_carry1 >> 24);
+    p[4] = (uint8_t) (l_carry1 >> 32);
+    
     l_carry += vli_sub(p_result, p_result, l_tmp); /* 2^128 + 2^96 - 2^32 + 1 */
-    l_diff = p_result[NUM_ECC_DIGITS] - l_carry;
-    if(l_diff > p_result[NUM_ECC_DIGITS])
+    l_diff = (uint64_t) p_result[ECC_BYTES];
+    l_diff |= (uint64_t) p_result[ECC_BYTES+1] << 8;
+    l_diff |= (uint64_t) p_result[ECC_BYTES+2] << 16 ;
+    l_diff |= (uint64_t) p_result[ECC_BYTES+3] << 24;
+    l_diff |= (uint64_t) p_result[ECC_BYTES+4] << 32;
+    l_diff |= (uint64_t) p_result[ECC_BYTES+5] << 40;
+    l_diff |= (uint64_t) p_result[ECC_BYTES+6] << 48;
+    l_diff |= (uint64_t) p_result[ECC_BYTES+7] << 56;
+    #ifdef DEBUG 
+    ERROR("l_diff");
+    printf("%016lx\n", l_diff);
+    #endif
+    l_diff1 = l_diff - l_carry;
+    #ifdef DEBUG 
+    ERROR("l_diff");
+    printf("%016lx\n", l_diff1);
+    #endif
+    if(l_diff1 > l_diff)
     { /* Propagate borrow if necessary. */
-        uint i;
-        for(i = 1 + NUM_ECC_DIGITS; ; ++i)
+        #ifdef DEBUG
+        #endif
+        uint8_t i;
+        for(i = 8 + ECC_BYTES; ; ++i)
         {
             --p_result[i];
-            if(p_result[i] != (uint64_t)-1)
+            if(p_result[i] != (uint8_t)-1)
             {
                 break;
             }
         }
+        // convert 
+        l_diff = (uint64_t) p_right[ECC_BYTES];
+        l_diff |= (uint64_t) p_right[ECC_BYTES+1] << 8;
+        l_diff |= (uint64_t) p_right[ECC_BYTES+2] << 16 ;
+        l_diff |= (uint64_t) p_right[ECC_BYTES+3] << 24;
+        l_diff |= (uint64_t) p_right[ECC_BYTES+4] << 32;
+        l_diff |= (uint64_t) p_right[ECC_BYTES+5] << 40;
+        l_diff |= (uint64_t) p_right[ECC_BYTES+6] << 48;
+        l_diff |= (uint64_t) p_right[ECC_BYTES+7] << 56;
     }
-    p_result[NUM_ECC_DIGITS] = l_diff;
+    p_result[ECC_BYTES] = (uint8_t) l_diff1;
+    p_result[ECC_BYTES+1] = (uint8_t) (l_diff1 >> 8);
+    p_result[ECC_BYTES+2] = (uint8_t) (l_diff1 >> 16);
+    p_result[ECC_BYTES+3] = (uint8_t) (l_diff1 >> 24);
+    p_result[ECC_BYTES+4] = (uint8_t) (l_diff1 >> 32);
+    p_result[ECC_BYTES+5] = (uint8_t) (l_diff1 >> 40);
+    p_result[ECC_BYTES+6] = (uint8_t) (l_diff1 >> 48);
+    p_result[ECC_BYTES+7] = (uint8_t) (l_diff1 >> 56);
 }
 
 /* Computes p_result = p_product % curve_p
     see PDF "Comparing Elliptic Curve Cryptography and RSA on 8-bit CPUs"
     section "Curve-Specific Optimizations" */
-void vli_mmod_fast(uint64_t *p_result, uint64_t *p_product)
+void vli_mmod_fast(uint8_t *p_result, uint8_t *p_product)
 {
-    uint64_t l_tmp[2*NUM_ECC_DIGITS];
+    #ifdef DEBUG 
+    ERROR("begin");
+    NUM_PRINT((p_product+ECC_BYTES));
+    NUM_PRINT(p_product);
+    #endif
+
+    uint8_t l_tmp[2*ECC_BYTES];
      
-    while(!vli_isZero(p_product + NUM_ECC_DIGITS)) /* While c1 != 0 */
+    while(!vli_isZero(p_product + ECC_BYTES)) /* While c1 != 0 */
     {
-        uint64_t l_carry = 0;
-        uint i;
+        uint8_t l_carry = 0;
+        uint8_t i;
         
         vli_clear(l_tmp);
-        vli_clear(l_tmp + NUM_ECC_DIGITS);
-        omega_mult(l_tmp, p_product + NUM_ECC_DIGITS); /* tmp = w * c1 */
-        vli_clear(p_product + NUM_ECC_DIGITS); /* p = c0 */
+        vli_clear(l_tmp + ECC_BYTES);
+        omega_mult(l_tmp, p_product + ECC_BYTES); /* tmp = w * c1 */
+        #ifdef DEBUG 
+        ERROR("l_tmp");
+        NUM_PRINT((l_tmp+ECC_BYTES));
+        NUM_PRINT(l_tmp);
+        #endif
+        vli_clear(p_product + ECC_BYTES); /* p = c0 */
         
         /* (c1, c0) = c0 + w * c1 */
-        for(i=0; i<NUM_ECC_DIGITS+3; ++i)
+        for(i=0; i<ECC_BYTES+3*8; ++i)
         {
-            uint64_t l_sum = p_product[i] + l_tmp[i] + l_carry;
+            uint8_t l_sum = p_product[i] + l_tmp[i] + l_carry;
             if(l_sum != p_product[i])
             {
                 l_carry = (l_sum < p_product[i]);

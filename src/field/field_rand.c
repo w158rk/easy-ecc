@@ -4,6 +4,12 @@
 /* 
     operations on numbers and vectors
  */
+#include <curves.h>
+#include <field.h>
+
+/* 
+    operations on numbers and vectors
+ */
 
 #if (defined(_WIN32) || defined(_WIN64))
 /* Windows */
@@ -12,7 +18,7 @@
 #include <windows.h>
 #include <wincrypt.h>
 
-int getRandomNumber(uint64_t *p_vli)
+uint8_t getRandomNumber(uint8_t *p_vli)
 {
     HCRYPTPROV l_prov;
     if(!CryptAcquireContext(&l_prov, NULL, NULL, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT))
@@ -37,7 +43,7 @@ int getRandomNumber(uint64_t *p_vli)
     #define O_CLOEXEC 0
 #endif
 
-int getRandomNumber(uint64_t *p_vli)
+uint8_t getRandomNumber(uint8_t *p_vli)
 {
     int l_fd = open("/dev/urandom", O_RDONLY | O_CLOEXEC);
     if(l_fd == -1)
@@ -69,13 +75,11 @@ int getRandomNumber(uint64_t *p_vli)
 
 #else 
 
-
-
-int getRandomNumber(uint64_t *p_vli)
+uint8_t getRandomNumber(uint8_t *p_vli)
 {
     
-    char *l_ptr = (char *)p_vli;
-    int i;
+    uint8_t *l_ptr = (uint8_t *)p_vli;
+    uint8_t i;
 
     for (i=0; i<ECC_BYTES; i++) {
         *l_ptr = random(0xff);
