@@ -1,0 +1,3 @@
+This is a project for the primitives in Elliptic Curve Cryptography (ECC). It is forked from https://github.com/esxgx/easy-ecc while some modifications have been done to make it  easier to build and read, as well as to make it a little more efficient.
+
+There are several branches for different versions, ECC-8, ECC-32 and ECC-64, aiming at platforms with different sizes of words. Algorithms in these branches are generally the same.
