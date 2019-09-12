@@ -11,7 +11,7 @@ mkdir build-release
 cd build-release
 cmake ../
 make
-`` 
+```
 
 or 
 
