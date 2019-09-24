@@ -4,6 +4,12 @@ There are several branches for different versions, ECC-8, ECC-32 and ECC-64, aim
 
 # Use 
 
+you can use 8-bit, 32-bit or 64-bit version for your convenience. 
+
+```sh
+git checkout ecc-{8 or 32 or 64}
+```
+
 ## compiling 
 
 ```sh
@@ -21,6 +27,17 @@ cd build-debug
 cmake -DCMAKE_BUILD_TYPE=Debug ../
 make 
 ``` 
+
+for Arduino mega 2560, use 
+
+```sh 
+mkdir build-avr 
+cd build-avr 
+cmake --DCMAKE_BUILD_TYPE=Release-avr ../
+make 
+make keytest-upload 
+make keytest-serial
+```
 
 ## run the test programs 
 
